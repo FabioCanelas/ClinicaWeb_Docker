@@ -1,0 +1,6 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+pymysql
+python-dotenv
+# Agrega aquí cualquier otro paquete que uses

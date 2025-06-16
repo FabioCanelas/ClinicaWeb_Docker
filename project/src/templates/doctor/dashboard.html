@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Doctor - Sistema Clínica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-speedometer2 text-primary"></i>
+        Dashboard - Dr. {{ current_user.nombre_usuario }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('doctor.nueva_consulta') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i>
+                Nueva Consulta
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Tarjetas de estadísticas -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Mis Consultas
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ mis_consultas }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-clipboard2-pulse fa-2x text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Consultas Hoy
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ consultas_hoy }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-calendar-check fa-2x text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Pacientes Atendidos
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pacientes_atendidos }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-people fa-2x text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Estado
+                        </div>
+                        <div class="h6 mb-0 font-weight-bold text-gray-800">
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle"></i>
+                                Activo
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-person-badge fa-2x text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Acciones rápidas -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-lightning-charge"></i>
+                    Acciones Rápidas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('doctor.nueva_consulta') }}" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-plus-circle"></i><br>
+                            Nueva Consulta
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('doctor.nuevo_paciente') }}" class="btn btn-success btn-lg w-100">
+                            <i class="bi bi-person-plus"></i><br>
+                            Nuevo Paciente
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('doctor.listar_pacientes') }}" class="btn btn-info btn-lg w-100">
+                            <i class="bi bi-people"></i><br>
+                            Ver Pacientes
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('doctor.listar_consultas') }}" class="btn btn-warning btn-lg w-100">
+                            <i class="bi bi-clipboard2-data"></i><br>
+                            Mis Consultas
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Consultas recientes -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-clock-history"></i>
+                    Mis Consultas Recientes
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if consultas_recientes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Paciente</th>
+                                <th>Especialidad</th>
+                                <th>Fecha Consulta</th>
+                                <th>Tipo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for consulta in consultas_recientes %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm me-3">
+                                            <i class="bi bi-person-circle text-primary fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <strong>{{ consulta.paciente.nombre_completo }}</strong><br>
+                                            <small class="text-muted">{{ consulta.paciente.carnet }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">
+                                        {{ consulta.especialidad.nombre }}
+                                    </span>
+                                </td>
+                                <td>{{ consulta.fecha_consulta.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ consulta.tipo_consulta }}</td>
+                                <td>
+                                    <a href="{{ url_for('doctor.ver_expediente', carnet=consulta.paciente.carnet) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                        Ver Expediente
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('doctor.listar_consultas') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-right"></i>
+                        Ver Todas las Consultas
+                    </a>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-clipboard2-x text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="text-muted mt-3">No hay consultas registradas</h4>
+                    <p class="text-muted">Comience registrando su primera consulta médica</p>
+                    <a href="{{ url_for('doctor.nueva_consulta') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i>
+                        Registrar Primera Consulta
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
