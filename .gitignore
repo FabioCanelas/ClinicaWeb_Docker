@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+*.log
+
+# Entornos virtuales
+env/
+venv/
+ENV/
+.venv/
+
+# Archivos de entorno
+.env
+.env.*
+
+# Docker
+*.pid
+*.seed
+*.pid.lock
+
+# VSCode
+.vscode/
+
+# Otros
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# Node (por si usas algo de frontend)
+node_modules/
+
+# Archivos de prueba
+coverage/
+htmlcov/
+
+# Archivos temporales
+*.bak
+*.tmp

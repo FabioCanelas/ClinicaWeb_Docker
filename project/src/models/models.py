@@ -5,7 +5,7 @@ Define todas las tablas y relaciones de la base de datos
 
 from flask_login import UserMixin
 from datetime import datetime
-from extensions import db  # ✅ import desde extensions.py
+from ..extensions import db  # ✅ import desde extensions.py
 
 class Rol(db.Model):
     __tablename__ = 'roles'

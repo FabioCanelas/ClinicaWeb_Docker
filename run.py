@@ -1,20 +1,9 @@
-#!/usr/bin/env python3
-"""
-Script principal para ejecutar la aplicación Flask
-Punto de entrada del Sistema de Gestión Clínica
-"""
-
 import os
 from dotenv import load_dotenv
+from project.src.app import create_app
 
 # Cargar variables de entorno desde .env
 load_dotenv()
-
-# Importar la aplicación desde el directorio src
-import sys
-sys.path.append('src')
-
-from app import create_app
 
 if __name__ == '__main__':
     # Crear la aplicación Flask
@@ -23,7 +12,8 @@ if __name__ == '__main__':
     # Configuración para desarrollo
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     port = int(os.environ.get('PORT', 5000))
-    host = os.environ.get('HOST', '127.0.0.1')
+    # Forzar host a 0.0.0.0 para Docker
+    host = '0.0.0.0'
     
     print("=" * 60)
     print("🏥 SISTEMA DE GESTIÓN CLÍNICA")

@@ -6,8 +6,8 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_required, current_user
 from functools import wraps
 from datetime import datetime, date
-from models.models import Usuario, Paciente, Especialidad, Expediente
-from app import db
+from ..models.models import Usuario, Paciente, Especialidad, Expediente
+from ..extensions import db
 from datetime import datetime, date
 import json
 

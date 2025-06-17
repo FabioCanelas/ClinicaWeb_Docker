@@ -7,8 +7,8 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from functools import wraps
-from models.models import Usuario, Rol, Paciente, Especialidad, Expediente
-from app import db
+from ..models.models import Usuario, Rol, Paciente, Especialidad, Expediente
+from ..extensions import db
 
 # Blueprint para rutas de administración
 admin_bp = Blueprint('admin', __name__)

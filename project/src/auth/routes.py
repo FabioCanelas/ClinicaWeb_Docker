@@ -3,10 +3,10 @@ Rutas de autenticación del sistema
 Maneja login, logout y verificación de credenciales
 """
 
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
-from models.models import Usuario
+from ..models.models import Usuario
 
 # Blueprint para rutas de autenticación
 auth_bp = Blueprint('auth', __name__)
@@ -18,6 +18,9 @@ def login():
     GET: Muestra el formulario de login
     POST: Procesa las credenciales y autentica al usuario
     """
+    # Siempre limpiar la sesión al entrar al login
+    logout_user()
+    
     # Si el usuario ya está autenticado, redirigir al dashboard
     if current_user.is_authenticated:
         if current_user.is_admin():
@@ -70,3 +73,14 @@ def logout():
     logout_user()
     flash(f'Sesión cerrada exitosamente. ¡Hasta luego, {nombre_usuario}!', 'info')
     return redirect(url_for('auth.login'))
+
+@auth_bp.route('/dashboard')
+@login_required
+def dashboard():
+    """
+    Muestra el dashboard del usuario
+    Redirige a la página de login si el usuario no está autenticado
+    """
+    if 'usuario_id' not in session:
+        return redirect(url_for('auth.login'))
+    return render_template('auth/dashboard.html')

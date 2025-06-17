@@ -7,8 +7,8 @@ from flask import Flask
 from werkzeug.security import generate_password_hash
 import os
 from dotenv import load_dotenv
-from extensions import db, login_manager  # ✅ import desde extensions
-from auth.routes import auth_bp
+from .extensions import db, login_manager  # ✅ import desde extensions
+from .auth.routes import auth_bp
 
 load_dotenv()  # Cargar variables desde .env
 
@@ -33,7 +33,7 @@ def create_app():
     login_manager.login_message_category = 'warning'
 
     # Importar modelos para que SQLAlchemy los reconozca
-    from models.models import Usuario, Rol, Paciente, Especialidad, Expediente
+    from .models.models import Usuario, Rol, Paciente, Especialidad, Expediente
 
     # User loader para Flask-Login
     @login_manager.user_loader
@@ -41,15 +41,22 @@ def create_app():
         return Usuario.query.get(int(user_id))
 
     # Registrar blueprints
-    from auth.routes import auth_bp
-    from routes.main_routes import main_bp
-    from routes.admin_routes import admin_bp
-    from routes.doctor_routes import doctor_bp
+    from .auth.routes import auth_bp
+    from .routes.main_routes import main_bp
+    from .routes.admin_routes import admin_bp
+    from .routes.doctor_routes import doctor_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(doctor_bp, url_prefix='/doctor')
+
+    @app.after_request
+    def add_header(response):
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '-1'
+        return response
 
     # Crear tablas si no existen
     with app.app_context():
@@ -64,7 +71,7 @@ def crear_datos_iniciales():
     Crea datos iniciales necesarios para el funcionamiento del sistema
     Incluye roles básicos y usuario administrador
     """
-    from models.models import Usuario, Rol, Especialidad
+    from .models.models import Usuario, Rol, Especialidad
 
     # Crear roles si no existen
     if not Rol.query.filter_by(nombre='administrador').first():
