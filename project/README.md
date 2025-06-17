@@ -29,14 +29,5 @@
   https://github.com/FabioCanelas/ClinicaWeb_Docker.git
 - Entra a la carpeta del proyecto:
   cd tu_repositorio
-- Levanta los contenedores con Docker Compose:
-  docker-compose up –build
-- Accede a la aplicación:
-  Abre tu navegador y entra a http://localhost:5000
-- Para detener la aplicación:
-  Presiona Ctrl+C en la terminal o ejecuta:
-  docker-compose down
-- activar entorno virtual
-   env\Scripts\activate
-- correr programa
-  python run.py
+- Comando para Levantar (iniciar) los servicios de la pagina web
+ docker-compose up --build
