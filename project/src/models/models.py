@@ -7,6 +7,12 @@ from flask_login import UserMixin
 from datetime import datetime
 from ..extensions import db  # ✅ import desde extensions.py
 
+# Tabla intermedia para la relación muchos a muchos entre doctores y especialidades
+doctor_especialidad = db.Table('doctor_especialidad',
+    db.Column('doctor_id', db.Integer, db.ForeignKey('usuarios.id'), primary_key=True),
+    db.Column('especialidad_id', db.Integer, db.ForeignKey('especialidades.id'), primary_key=True)
+)
+
 class Rol(db.Model):
     __tablename__ = 'roles'
 
@@ -25,14 +31,23 @@ class Usuario(UserMixin, db.Model):
     nombre_usuario = db.Column(db.String(80), unique=True, nullable=False)
     contrasena = db.Column(db.String(255), nullable=False)
     rol_id = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=False)
+    superadmin = db.Column(db.Boolean, default=False)
+    nombre_completo = db.Column(db.String(150), nullable=False)
 
     expedientes = db.relationship('Expediente', backref='doctor', lazy=True)
+    especialidades = db.relationship('Especialidad', secondary=doctor_especialidad, backref='doctores')
 
     def is_admin(self):
         return self.rol.nombre == 'administrador'
 
     def is_doctor(self):
         return self.rol.nombre == 'doctor'
+
+    def is_superadmin(self):
+        return self.superadmin
+
+    def get_nombre_completo(self):
+        return self.nombre_completo
 
     def __repr__(self):
         return f'<Usuario {self.nombre_usuario}>'

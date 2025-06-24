@@ -86,8 +86,10 @@ def crear_datos_iniciales():
         admin_rol = Rol.query.filter_by(nombre='administrador').first()
         admin_user = Usuario(
             nombre_usuario='admin',
-            contrasena=generate_password_hash('admin123'),
-            rol_id=admin_rol.id
+            nombre_completo='Administrador General',  # <-- Campo obligatorio
+            contrasena=generate_password_hash('Admin@123'),
+            rol_id=admin_rol.id,
+            superadmin=True
         )
         db.session.add(admin_user)
         db.session.commit()

@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block title %}Nueva Consulta - Sistema Clínica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-plus-circle text-primary"></i>
+        Registrar Nueva Consulta
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('doctor.listar_consultas') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Volver a Consultas
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-clipboard2-pulse"></i>
+                    Información de la Consulta Médica
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    <div class="row">
+                        <!-- Información básica de la consulta -->
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-info-circle"></i>
+                                        Datos Básicos
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="paciente_carnet" class="form-label">
+                                            <i class="bi bi-person"></i>
+                                            Paciente *
+                                        </label>
+                                        <select class="form-select" id="paciente_carnet" name="paciente_carnet" required>
+                                            <option value="">Seleccionar paciente</option>
+                                            {% for paciente in pacientes %}
+                                            <option value="{{ paciente.carnet }}" 
+                                                    {% if request.args.get('paciente') == paciente.carnet %}selected{% endif %}>
+                                                {{ paciente.carnet }} - {{ paciente.nombre_completo }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="form-text">
+                                            <a href="{{ url_for('doctor.nuevo_paciente') }}" class="text-decoration-none">
+                                                <i class="bi bi-plus-circle"></i>
+                                                ¿No encuentra el paciente? Registrar nuevo
+                                            </a>
+                                        </div>
+                                        <div class="invalid-feedback">
+                                            Por favor seleccione un paciente.
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="especialidad_id" class="form-label">
+                                            <i class="bi bi-heart-pulse"></i>
+                                            Especialidad *
+                                        </label>
+                                        <select class="form-select" id="especialidad_id" name="especialidad_id" required>
+                                            <option value="">Seleccionar especialidad</option>
+                                            {% for especialidad in especialidades %}
+                                            <option value="{{ especialidad.id }}">{{ especialidad.nombre }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            Por favor seleccione una especialidad.
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="tipo_consulta" class="form-label">
+                                            <i class="bi bi-clipboard2"></i>
+                                            Tipo de Consulta *
+                                        </label>
+                                        <select class="form-select" id="tipo_consulta" name="tipo_consulta" required>
+                                            <option value="">Seleccionar tipo</option>
+                                            <option value="Primera vez">Primera vez</option>
+                                            <option value="Control">Control</option>
+                                            <option value="Emergencia">Emergencia</option>
+                                            <option value="Seguimiento">Seguimiento</option>
+                                            <option value="Consulta especializada">Consulta especializada</option>
+                                        </select>
+                                        <div class="invalid-feedback">
+                                            Por favor seleccione el tipo de consulta.
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="fecha_consulta" class="form-label">
+                                            <i class="bi bi-calendar"></i>
+                                            Fecha de la Consulta *
+                                        </label>
+                                        <input type="date" 
+                                               class="form-control" 
+                                               id="fecha_consulta" 
+                                               name="fecha_consulta" 
+                                               value="{{ date.today() }}"
+                                               required>
+                                        <div class="invalid-feedback">
+                                            Por favor seleccione la fecha de la consulta.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información clínica -->
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-clipboard2-pulse"></i>
+                                        Información Clínica
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="sintomas" class="form-label">
+                                            <i class="bi bi-thermometer"></i>
+                                            Síntomas Presentados
+                                        </label>
+                                        <textarea class="form-control" 
+                                                  id="sintomas" 
+                                                  name="sintomas" 
+                                                  rows="3"
+                                                  placeholder="Describa los síntomas que presenta el paciente..."></textarea>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="diagnostico" class="form-label">
+                                            <i class="bi bi-search"></i>
+                                            Diagnóstico
+                                        </label>
+                                        <textarea class="form-control" 
+                                                  id="diagnostico" 
+                                                  name="diagnostico" 
+                                                  rows="3"
+                                                  placeholder="Diagnóstico médico basado en la evaluación..."></textarea>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="tratamiento" class="form-label">
+                                            <i class="bi bi-capsule"></i>
+                                            Tratamiento Prescrito
+                                        </label>
+                                        <textarea class="form-control" 
+                                                  id="tratamiento" 
+                                                  name="tratamiento" 
+                                                  rows="3"
+                                                  placeholder="Medicamentos, terapias o procedimientos recomendados..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resumen clínico y observaciones -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card bg-light mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-file-text"></i>
+                                        Resumen y Observaciones
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="resumen_clinico" class="form-label">
+                                            <i class="bi bi-file-medical"></i>
+                                            Resumen Clínico
+                                        </label>
+                                        <textarea class="form-control" 
+                                                  id="resumen_clinico" 
+                                                  name="resumen_clinico" 
+                                                  rows="4"
+                                                  placeholder="Resumen general de la consulta, hallazgos importantes y plan de seguimiento..."></textarea>
+                                        <div class="form-text">
+                                            Resumen ejecutivo de la consulta para referencia rápida
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="observaciones" class="form-label">
+                                            <i class="bi bi-chat-text"></i>
+                                            Observaciones Adicionales
+                                        </label>
+                                        <textarea class="form-control" 
+                                                  id="observaciones" 
+                                                  name="observaciones" 
+                                                  rows="3"
+                                                  placeholder="Observaciones adicionales, recomendaciones especiales, próximas citas..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vista previa del paciente seleccionado -->
+                    <div class="card bg-info bg-opacity-10 mb-4" id="pacientePreview" style="display: none;">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-person-vcard"></i>
+                                Información del Paciente Seleccionado
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row" id="pacienteInfo">
+                                <!-- Se llenará dinámicamente con JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Información importante:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Los campos marcados con (*) son obligatorios.</li>
+                            <li>La consulta quedará registrada bajo su nombre como doctor responsable.</li>
+                            <li>Puede editar la información posteriormente si es necesario.</li>
+                            <li>El expediente del paciente se actualizará automáticamente.</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('doctor.listar_consultas') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle"></i>
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i>
+                            Registrar Consulta
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Validación de formulario
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Información de pacientes para preview
+// const pacientesData = {
+//     {% for paciente in pacientes %}
+//     "{{ paciente.carnet }}": {
+//         "nombre": "{{ paciente.nombre_completo }}",
+//         "edad": {{ paciente.edad }},
+//         "genero": "{{ paciente.genero or 'No especificado' }}",
+//         "telefono": "{{ paciente.telefono or 'No registrado' }}",
+//         "email": "{{ paciente.email or 'No registrado' }}",
+//         "fecha_nacimiento": "{{ paciente.fecha_nacimiento.strftime('%d/%m/%Y') }}"
+//     }{% if not loop.last %},{% endif %}
+//     {% endfor %}
+// };
+
+// Mostrar información del paciente seleccionado
+document.getElementById('paciente_carnet').addEventListener('change', function() {
+    const carnet = this.value;
+    const previewDiv = document.getElementById('pacientePreview');
+    const infoDiv = document.getElementById('pacienteInfo');
+    
+    if (carnet && pacientesData[carnet]) {
+        const paciente = pacientesData[carnet];
+        
+        infoDiv.innerHTML = `
+            <div class="col-md-3">
+                <p><strong>Nombre:</strong><br>${paciente.nombre}</p>
+            </div>
+            <div class="col-md-2">
+                <p><strong>Edad:</strong><br>${paciente.edad} años</p>
+            </div>
+            <div class="col-md-2">
+                <p><strong>Género:</strong><br>${paciente.genero}</p>
+            </div>
+            <div class="col-md-3">
+                <p><strong>Teléfono:</strong><br>${paciente.telefono}</p>
+            </div>
+            <div class="col-md-2">
+                <p><strong>F. Nacimiento:</strong><br>${paciente.fecha_nacimiento}</p>
+            </div>
+        `;
+        
+        previewDiv.style.display = 'block';
+    } else {
+        previewDiv.style.display = 'none';
+    }
+});
+
+// Establecer fecha mínima (no puede ser muy antigua) y máxima (hoy)
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaInput = document.getElementById('fecha_consulta');
+    const hoy = new Date();
+    const hace30Dias = new Date();
+    hace30Dias.setDate(hoy.getDate() - 30);
+    
+    fechaInput.max = hoy.toISOString().split('T')[0];
+    fechaInput.min = hace30Dias.toISOString().split('T')[0];
+});
+
+// Auto-completar campos basado en el tipo de consulta
+document.getElementById('tipo_consulta').addEventListener('change', function() {
+    const tipo = this.value;
+    const sintomasField = document.getElementById('sintomas');
+    const diagnosticoField = document.getElementById('diagnostico');
+    const tratamientoField = document.getElementById('tratamiento');
+    
+    // Sugerencias automáticas basadas en el tipo
+    if (tipo === 'Primera vez') {
+        if (!sintomasField.value) {
+            sintomasField.placeholder = 'Motivo de consulta inicial, síntomas principales...';
+        }
+    } else if (tipo === 'Control') {
+        if (!sintomasField.value) {
+            sintomasField.placeholder = 'Evolución desde la última consulta, nuevos síntomas...';
+        }
+    } else if (tipo === 'Emergencia') {
+        if (!sintomasField.value) {
+            sintomasField.placeholder = 'Síntomas de emergencia, tiempo de evolución...';
+        }
+    }
+});
+
+// Contador de caracteres para campos de texto
+function agregarContador(fieldId, maxLength = 500) {
+    const field = document.getElementById(fieldId);
+    const contador = document.createElement('div');
+    contador.className = 'form-text text-end';
+    contador.id = fieldId + '_contador';
+    field.parentNode.appendChild(contador);
+    
+    function actualizarContador() {
+        const restantes = maxLength - field.value.length;
+        contador.textContent = `${field.value.length}/${maxLength} caracteres`;
+        contador.className = restantes < 50 ? 'form-text text-end text-warning' : 'form-text text-end text-muted';
+    }
+    
+    field.addEventListener('input', actualizarContador);
+    actualizarContador();
+}
+
+// Agregar contadores a los campos de texto
+agregarContador('sintomas', 500);
+agregarContador('diagnostico', 500);
+agregarContador('tratamiento', 500);
+agregarContador('resumen_clinico', 1000);
+agregarContador('observaciones', 500);
+</script>
+{% endblock %}

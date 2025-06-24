@@ -30,4 +30,4 @@
 - Entra a la carpeta del proyecto:
   cd tu_repositorio
 - Comando para Levantar (iniciar) los servicios de la pagina web
- docker-compose up --build
+  docker-compose up --build

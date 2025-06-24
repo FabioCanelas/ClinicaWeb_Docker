@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Paciente - Sistema Clínica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-person-plus text-primary"></i>
+        Registrar Nuevo Paciente
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('doctor.listar_pacientes') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Volver a Pacientes
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-person-vcard"></i>
+                    Información del Paciente
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="needs-validation" novalidate>
+                    <!-- Información básica -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="carnet" class="form-label">
+                                <i class="bi bi-credit-card"></i>
+                                Número de Carnet/ID *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="carnet" 
+                                   name="carnet" 
+                                   placeholder="Ej: 12345678-9"
+                                   required>
+                            <div class="form-text">
+                                Número único de identificación del paciente
+                            </div>
+                            <div class="invalid-feedback">
+                                Por favor ingrese el número de carnet del paciente.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="fecha_nacimiento" class="form-label">
+                                <i class="bi bi-calendar"></i>
+                                Fecha de Nacimiento *
+                            </label>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="fecha_nacimiento" 
+                                   name="fecha_nacimiento" 
+                                   required>
+                            <div class="invalid-feedback">
+                                Por favor seleccione la fecha de nacimiento.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nombres" class="form-label">
+                                <i class="bi bi-person"></i>
+                                Nombres *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="nombres" 
+                                   name="nombres" 
+                                   placeholder="Ej: Juan Carlos"
+                                   required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese los nombres del paciente.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="apellidos" class="form-label">
+                                <i class="bi bi-person"></i>
+                                Apellidos *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="apellidos" 
+                                   name="apellidos" 
+                                   placeholder="Ej: Pérez González"
+                                   required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese los apellidos del paciente.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="genero" class="form-label">
+                                <i class="bi bi-gender-ambiguous"></i>
+                                Género
+                            </label>
+                            <select class="form-select" id="genero" name="genero">
+                                <option value="">Seleccionar género</option>
+                                <option value="Masculino">Masculino</option>
+                                <option value="Femenino">Femenino</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="telefono" class="form-label">
+                                <i class="bi bi-telephone"></i>
+                                Teléfono
+                            </label>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="telefono" 
+                                   name="telefono" 
+                                   placeholder="Ej: +503 7000-0000">
+                            <div class="form-text">
+                                Número de contacto principal
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de contacto -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">
+                                <i class="bi bi-envelope"></i>
+                                Correo Electrónico
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email" 
+                                   placeholder="ejemplo@correo.com">
+                            <div class="form-text">
+                                Correo electrónico de contacto (opcional)
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="direccion" class="form-label">
+                                <i class="bi bi-geo-alt"></i>
+                                Dirección
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="direccion" 
+                                   name="direccion" 
+                                   placeholder="Dirección completa">
+                        </div>
+                    </div>
+
+                    <!-- Vista previa de la información -->
+                    <div class="card bg-light mb-3" id="previewCard" style="display: none;">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-eye"></i>
+                                Vista Previa de la Información
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Carnet:</strong> <span id="preview-carnet"></span></p>
+                                    <p><strong>Nombre Completo:</strong> <span id="preview-nombre"></span></p>
+                                    <p><strong>Fecha de Nacimiento:</strong> <span id="preview-fecha"></span></p>
+                                    <p><strong>Edad:</strong> <span id="preview-edad"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Género:</strong> <span id="preview-genero"></span></p>
+                                    <p><strong>Teléfono:</strong> <span id="preview-telefono"></span></p>
+                                    <p><strong>Email:</strong> <span id="preview-email"></span></p>
+                                    <p><strong>Dirección:</strong> <span id="preview-direccion"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info"  role="alert">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Información importante:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Los campos marcados con (*) son obligatorios.</li>
+                            <li>El número de carnet debe ser único en el sistema.</li>
+                            <li>La información puede ser editada posteriormente.</li>
+                            <li>El paciente quedará activo automáticamente en el sistema.</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('doctor.listar_pacientes') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle"></i>
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus"></i>
+                            Registrar Paciente
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Validación de formulario
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Función para calcular edad
+function calcularEdad(fechaNacimiento) {
+    const hoy = new Date();
+    const nacimiento = new Date(fechaNacimiento);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+    
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+        edad--;
+    }
+    
+    return edad;
+}
+
+// Vista previa en tiempo real
+function actualizarPreview() {
+    const carnet = document.getElementById('carnet').value;
+    const nombres = document.getElementById('nombres').value;
+    const apellidos = document.getElementById('apellidos').value;
+    const fechaNacimiento = document.getElementById('fecha_nacimiento').value;
+    const genero = document.getElementById('genero').value;
+    const telefono = document.getElementById('telefono').value;
+    const email = document.getElementById('email').value;
+    const direccion = document.getElementById('direccion').value;
+    
+    // Mostrar/ocultar preview
+    const previewCard = document.getElementById('previewCard');
+    if (carnet || nombres || apellidos) {
+        previewCard.style.display = 'block';
+        
+        document.getElementById('preview-carnet').textContent = carnet || 'No especificado';
+        document.getElementById('preview-nombre').textContent = 
+            (nombres + ' ' + apellidos).trim() || 'No especificado';
+        document.getElementById('preview-fecha').textContent = 
+            fechaNacimiento ? new Date(fechaNacimiento).toLocaleDateString('es-ES') : 'No especificada';
+        document.getElementById('preview-edad').textContent = 
+            fechaNacimiento ? calcularEdad(fechaNacimiento) + ' años' : 'No calculada';
+        document.getElementById('preview-genero').textContent = genero || 'No especificado';
+        document.getElementById('preview-telefono').textContent = telefono || 'No especificado';
+        document.getElementById('preview-email').textContent = email || 'No especificado';
+        document.getElementById('preview-direccion').textContent = direccion || 'No especificada';
+    } else {
+        previewCard.style.display = 'none';
+    }
+}
+
+// Agregar event listeners para actualizar preview
+document.getElementById('carnet').addEventListener('input', actualizarPreview);
+document.getElementById('nombres').addEventListener('input', actualizarPreview);
+document.getElementById('apellidos').addEventListener('input', actualizarPreview);
+document.getElementById('fecha_nacimiento').addEventListener('change', actualizarPreview);
+document.getElementById('genero').addEventListener('change', actualizarPreview);
+document.getElementById('telefono').addEventListener('input', actualizarPreview);
+document.getElementById('email').addEventListener('input', actualizarPreview);
+document.getElementById('direccion').addEventListener('input', actualizarPreview);
+
+// Validación de fecha de nacimiento (no puede ser futura)
+document.getElementById('fecha_nacimiento').addEventListener('change', function() {
+    const fechaSeleccionada = new Date(this.value);
+    const hoy = new Date();
+    
+    if (fechaSeleccionada > hoy) {
+        this.setCustomValidity('La fecha de nacimiento no puede ser futura');
+        this.classList.add('is-invalid');
+    } else {
+        this.setCustomValidity('');
+        this.classList.remove('is-invalid');
+        if (this.value) {
+            this.classList.add('is-valid');
+        }
+    }
+});
+
+// Formateo automático de teléfono
+document.getElementById('telefono').addEventListener('input', function() {
+    let valor = this.value.replace(/\D/g, ''); // Remover caracteres no numéricos
+    
+    if (valor.length >= 8) {
+        // Formato: +503 7000-0000
+        if (valor.startsWith('503')) {
+            valor = '+503 ' + valor.substring(3, 7) + '-' + valor.substring(7, 11);
+        } else if (valor.length === 8) {
+            valor = valor.substring(0, 4) + '-' + valor.substring(4, 8);
+        }
+    }
+    
+    this.value = valor;
+});
+</script>
+{% endblock %}

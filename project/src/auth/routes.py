@@ -5,7 +5,7 @@ Maneja login, logout y verificación de credenciales
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_user, logout_user, login_required, current_user
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from ..models.models import Usuario
 
 # Blueprint para rutas de autenticación
@@ -35,16 +35,27 @@ def login():
         
         # Validar datos del formulario
         if not nombre_usuario or not contrasena:
-            flash('Por favor complete todos los campos.', 'error')
-            return render_template('auth/login.html')
+            error = 'Por favor complete todos los campos.'
+            return render_template('auth/login.html', error=error)
+        
+        # Validar requisitos de contraseña
+        import re
+        if not re.search(r'[A-Z]', contrasena):
+            error = 'La contraseña debe contener al menos una letra mayúscula.'
+            return render_template('auth/login.html', error=error)
+        if not re.search(r'[^A-Za-z0-9]', contrasena):
+            error = 'La contraseña debe contener al menos un carácter especial.'
+            return render_template('auth/login.html', error=error)
         
         # Buscar usuario en la base de datos
         usuario = Usuario.query.filter_by(nombre_usuario=nombre_usuario).first()
         
-        # Verificar credenciales
-        if not usuario or not check_password_hash(usuario.contrasena, contrasena):
-            flash('Credenciales incorrectas. Intente nuevamente.', 'error')
-            return render_template('auth/login.html')
+        if not usuario:
+            error = 'El nombre de usuario no existe.'
+            return render_template('auth/login.html', error=error)
+        elif not check_password_hash(usuario.contrasena, contrasena):
+            error = 'Contraseña incorrecta.'
+            return render_template('auth/login.html', error=error)
         
         # Autenticar usuario
         login_user(usuario, remember=remember)
@@ -84,3 +95,55 @@ def dashboard():
     if 'usuario_id' not in session:
         return redirect(url_for('auth.login'))
     return render_template('auth/dashboard.html')
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
+@login_required
+def register():
+    # Solo administradores pueden acceder
+    if not current_user.is_admin():
+        return redirect(url_for('auth.login'))
+
+    from ..models.models import Rol
+    error = None
+    success = None
+    roles = Rol.query.filter(Rol.nombre.in_(['administrador', 'doctor'])).all()
+    if request.method == 'POST':
+        nombre_usuario = request.form.get('nombre_usuario')
+        contrasena = request.form.get('contrasena')
+        contrasena2 = request.form.get('contrasena2')
+        rol_nombre = request.form.get('rol')
+        nombre_completo = request.form.get('nombre_completo')
+        
+        # Validaciones básicas
+        if not nombre_usuario or not contrasena or not contrasena2 or not rol_nombre or not nombre_completo:
+            error = 'Por favor complete todos los campos.'
+        elif contrasena != contrasena2:
+            error = 'Las contraseñas no coinciden.'
+        else:
+            import re
+            if not re.search(r'[A-Z]', contrasena):
+                error = 'La contraseña debe contener al menos una letra mayúscula.'
+            elif not re.search(r'[^A-Za-z0-9]', contrasena):
+                error = 'La contraseña debe contener al menos un carácter especial.'
+            elif Usuario.query.filter_by(nombre_usuario=nombre_usuario).first():
+                error = 'El nombre de usuario ya existe.'
+            elif rol_nombre not in ['administrador', 'doctor']:
+                error = 'Rol inválido.'
+        
+        if not error:
+            rol = Rol.query.filter_by(nombre=rol_nombre).first()
+            # Si se intenta crear un superadmin desde el formulario, bloquearlo
+            if rol_nombre == 'administrador' and nombre_usuario == 'admin':
+                error = 'No se puede crear otro superadministrador.'
+            else:
+                nuevo_usuario = Usuario(
+                    nombre_usuario=nombre_usuario,
+                    nombre_completo=nombre_completo,
+                    contrasena=generate_password_hash(contrasena),
+                    rol_id=rol.id
+                )
+                from ..extensions import db
+                db.session.add(nuevo_usuario)
+                db.session.commit()
+                success = f'Usuario {nombre_usuario} registrado exitosamente como {rol_nombre}.'
+    return render_template('auth/register.html', error=error, success=success, roles=roles)

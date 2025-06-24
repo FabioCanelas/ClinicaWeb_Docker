@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Doctores - Sistema Clínica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-people text-primary"></i>
+        Gestión de Doctores
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin.nuevo_doctor') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i>
+            Nuevo Doctor
+        </a>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="bi bi-list-ul"></i>
+            Doctores Registrados ({{ doctores|length }})
+        </h6>
+    </div>
+    <div class="card-body">
+        {% if doctores %}
+        <div class="table-responsive">
+            <table class="table table-hover" id="doctoresTable">
+                <thead class="table-primary">
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th>Consultas</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doctor in doctores %}
+                    <tr>
+                        <td>{{ doctor.id }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-3">
+                                    <i class="bi bi-person-circle text-primary fs-4"></i>
+                                </div>
+                                <div>
+                                    <strong>{{ doctor.nombre_usuario }}</strong><br>
+                                    <small class="text-muted">Dr. {{ doctor.nombre_completo }}</small><br>
+                                    <span class="badge bg-info">
+                                        {% for esp in doctor.especialidades %}{{ esp.nombre }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">
+                                {{ doctor.rol.nombre.title() }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">
+                                {{ doctor.expedientes|length }} consultas
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle"></i>
+                                Activo
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-info" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#infoModal{{ doctor.id }}">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Modal de información del doctor -->
+                    <div class="modal fade" id="infoModal{{ doctor.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        <i class="bi bi-person-badge"></i>
+                                        Información del Doctor
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold">Información General</h6>
+                                            <p><strong>ID:</strong> {{ doctor.id }}</p>
+                                            <p><strong>Usuario:</strong> {{ doctor.nombre_usuario }}</p>
+                                            <p><strong>Nombre completo:</strong> {{ doctor.nombre_completo }}</p>
+                                            <p><strong>Rol:</strong> {{ doctor.rol.nombre.title() }}</p>
+                                            <p><strong>Especialidades:</strong> 
+                                                {% for esp in doctor.especialidades %}
+                                                    <span class="badge bg-primary">{{ esp.nombre }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">Sin especialidad</span>
+                                                {% endfor %}
+                                            </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold">Estadísticas</h6>
+                                            <p><strong>Total Consultas:</strong> {{ doctor.expedientes|length }}</p>
+                                            <p><strong>Estado:</strong> 
+                                                <span class="badge bg-success">Activo</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if doctor.expedientes %}
+                                    <h6 class="fw-bold mt-3">Consultas Recientes</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Paciente</th>
+                                                    <th>Especialidad</th>
+                                                    <th>Fecha</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for exp in doctor.expedientes[:5] %}
+                                                <tr>
+                                                    <td>{{ exp.paciente.nombre_completo }}</td>
+                                                    <td>{{ exp.especialidad.nombre }}</td>
+                                                    <td>{{ exp.fecha_consulta.strftime('%d/%m/%Y') }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-person-x text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">No hay doctores registrados</h4>
+            <p class="text-muted">Comience agregando un nuevo doctor al sistema</p>
+            <a href="{{ url_for('admin.nuevo_doctor') }}" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i>
+                Registrar Primer Doctor
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Inicializar DataTable si hay doctores
+{% if doctores %}
+$(document).ready(function() {
+    $('#doctoresTable').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+        },
+        "pageLength": 10,
+        "order": [[ 0, "desc" ]]
+    });
+});
+{% endif %}
+</script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css">
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
+{% endblock %}

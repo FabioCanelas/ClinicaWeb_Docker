@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Especialidades Médicas - Sistema Clínica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-heart-pulse text-primary"></i>
+        Especialidades Médicas
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevaEspecialidadModal">
+            <i class="bi bi-plus-circle"></i>
+            Nueva Especialidad
+        </button>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="bi bi-list-ul"></i>
+            Especialidades Registradas ({{ especialidades|length }})
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for especialidad in especialidades %}
+            <div class="col-md-4 mb-3">
+                <div class="card border-left-info">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-1">
+                                    <i class="bi bi-heart-pulse text-info me-2"></i>
+                                    {{ especialidad.nombre }}
+                                </h6>
+                                <p class="card-text text-muted small">
+                                    {{ especialidad.expedientes|length }} consultas realizadas
+                                </p>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#infoModal{{ especialidad.id }}">
+                                            <i class="bi bi-eye"></i> Ver detalles
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="#">
+                                            <i class="bi bi-trash"></i> Eliminar
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de información de especialidad -->
+            <div class="modal fade" id="infoModal{{ especialidad.id }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-heart-pulse"></i>
+                                {{ especialidad.nombre }}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold">Información General</h6>
+                                    <p><strong>ID:</strong> {{ especialidad.id }}</p>
+                                    <p><strong>Nombre:</strong> {{ especialidad.nombre }}</p>
+                                    <p><strong>Total Consultas:</strong> {{ especialidad.expedientes|length }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold">Estadísticas</h6>
+                                    <div class="card bg-light">
+                                        <div class="card-body text-center">
+                                            <h4 class="text-primary">{{ especialidad.expedientes|length }}</h4>
+                                            <p class="text-muted mb-0">Consultas Realizadas</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if especialidad.expedientes %}
+                            <h6 class="fw-bold mt-3">Consultas Recientes</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Paciente</th>
+                                            <th>Doctor</th>
+                                            <th>Fecha</th>
+                                            <th>Tipo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for exp in especialidad.expedientes[:5] %}
+                                        <tr>
+                                            <td>{{ exp.paciente.nombre_completo }}</td>
+                                            <td>{{ exp.doctor.nombre_usuario if exp.doctor else 'N/A' }}</td>
+                                            <td>{{ exp.fecha_consulta.strftime('%d/%m/%Y') }}</td>
+                                            <td>{{ exp.tipo_consulta }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para nueva especialidad -->
+<div class="modal fade" id="nuevaEspecialidadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle"></i>
+                    Nueva Especialidad
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="nuevaEspecialidadForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nombreEspecialidad" class="form-label">
+                            <i class="bi bi-heart-pulse"></i>
+                            Nombre de la Especialidad *
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="nombreEspecialidad" 
+                               name="nombre" 
+                               placeholder="Ej: Cardiología, Pediatría, etc."
+                               required>
+                        <div class="form-text">
+                            Ingrese el nombre completo de la especialidad médica
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle"></i>
+                        <small>Las especialidades se utilizan para categorizar las consultas médicas y generar reportes especializados.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i>
+                        Crear Especialidad
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Manejar envío del formulario de nueva especialidad
+document.getElementById('nuevaEspecialidadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Deshabilitar botón y mostrar loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Creando...';
+    
+    fetch('{{ url_for("admin.nueva_especialidad") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Mostrar mensaje de éxito
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="bi bi-check-circle"></i>
+                ${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insertar alerta después del header
+            const header = document.querySelector('.border-bottom');
+            header.parentNode.insertBefore(alertDiv, header.nextSibling);
+            
+            // Cerrar modal y recargar página
+            bootstrap.Modal.getInstance(document.getElementById('nuevaEspecialidadModal')).hide();
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            // Mostrar error
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger';
+            alertDiv.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${data.message}`;
+            
+            const modalBody = document.querySelector('#nuevaEspecialidadModal .modal-body');
+            modalBody.insertBefore(alertDiv, modalBody.firstChild);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al crear la especialidad. Intente nuevamente.');
+    })
+    .finally(() => {
+        // Restaurar botón
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
+});
+
+// Limpiar modal al cerrarse
+document.getElementById('nuevaEspecialidadModal').addEventListener('hidden.bs.modal', function () {
+    this.querySelector('form').reset();
+    const alerts = this.querySelectorAll('.alert');
+    alerts.forEach(alert => alert.remove());
+});
+</script>
+{% endblock %}

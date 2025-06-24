@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+
+{% block title %}Expediente - {{ paciente.nombre_completo }} - Sistema Clínica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-file-medical text-primary"></i>
+        Expediente Médico
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('doctor.nueva_consulta') }}?paciente={{ paciente.carnet }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i>
+                Nueva Consulta
+            </a>
+            <button type="button" class="btn btn-outline-secondary">
+                <i class="bi bi-printer"></i>
+                Imprimir
+            </button>
+        </div>
+        <a href="{{ url_for('doctor.listar_pacientes') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Volver a Pacientes
+        </a>
+    </div>
+</div>
+
+<!-- Información del paciente -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-vcard"></i>
+                    Información del Paciente
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center mb-3">
+                            <i class="bi bi-person-circle text-primary" style="font-size: 5rem;"></i>
+                            <h4 class="mt-2">{{ paciente.nombre_completo }}</h4>
+                            <span class="badge bg-{{ 'success' if paciente.estado else 'danger' }} fs-6">
+                                {{ 'Activo' if paciente.estado else 'Inactivo' }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Datos Personales</h6>
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td><strong>Carnet:</strong></td>
+                                        <td>{{ paciente.carnet }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Fecha de Nacimiento:</strong></td>
+                                        <td>{{ paciente.fecha_nacimiento.strftime('%d/%m/%Y') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Edad:</strong></td>
+                                        <td>{{ paciente.edad }} años</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Género:</strong></td>
+                                        <td>{{ paciente.genero or 'No especificado' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Información de Contacto</h6>
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td><strong>Teléfono:</strong></td>
+                                        <td>
+                                            {% if paciente.telefono %}
+                                            <a href="tel:{{ paciente.telefono }}" class="text-decoration-none">
+                                                <i class="bi bi-telephone"></i> {{ paciente.telefono }}
+                                            </a>
+                                            {% else %}
+                                            No registrado
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Email:</strong></td>
+                                        <td>
+                                            {% if paciente.email %}
+                                            <a href="mailto:{{ paciente.email }}" class="text-decoration-none">
+                                                <i class="bi bi-envelope"></i> {{ paciente.email }}
+                                            </a>
+                                            {% else %}
+                                            No registrado
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Dirección:</strong></td>
+                                        <td>{{ paciente.direccion or 'No registrada' }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estadísticas del expediente -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-clipboard2-pulse fa-2x mb-2"></i>
+                <h4>{{ expedientes|length }}</h4>
+                <p class="mb-0">Total Consultas</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-calendar-check fa-2x mb-2"></i>
+                <h4>
+                    {% if expedientes %}
+                    {{ expedientes[0].fecha_consulta.strftime('%d/%m/%Y') }}
+                    {% else %}
+                    N/A
+                    {% endif %}
+                </h4>
+                <p class="mb-0">Última Consulta</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-heart-pulse fa-2x mb-2"></i>
+                <h4>
+                    {% set especialidades_unicas = expedientes|map(attribute='especialidad.nombre')|list|unique|list %}
+                    {{ especialidades_unicas|length }}
+                </h4>
+                <p class="mb-0">Especialidades</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="bi bi-people fa-2x mb-2"></i>
+                <h4>
+                    {% set doctores_unicos = expedientes|map(attribute='doctor.nombre_usuario')|list|unique|list %}
+                    {{ doctores_unicos|length }}
+                </h4>
+                <p class="mb-0">Doctores</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Historial de consultas -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-clock-history"></i>
+                    Historial de Consultas ({{ expedientes|length }})
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if expedientes %}
+                <div class="timeline">
+                    {% for expediente in expedientes %}
+                    <div class="timeline-item mb-4">
+                        <div class="row">
+                            <div class="col-md-2 text-center">
+                                <div class="timeline-date">
+                                    <div class="badge bg-primary fs-6 mb-2">
+                                        {{ expediente.fecha_consulta.strftime('%d') }}
+                                    </div>
+                                    <div class="text-muted small">
+                                        {{ expediente.fecha_consulta.strftime('%b %Y') }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-10">
+                                <div class="card border-start border-primary border-4">
+                                    <div class="card-header bg-light">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">
+                                                    <span class="badge bg-info me-2">{{ expediente.especialidad.nombre }}</span>
+                                                    {{ expediente.tipo_consulta }}
+                                                </h6>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-person-badge"></i>
+                                                    Dr. {{ expediente.doctor.nombre_usuario if expediente.doctor else 'N/A' }}
+                                                    | 
+                                                    <i class="bi bi-clock"></i>
+                                                    {{ expediente.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}
+                                                </small>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-primary" 
+                                                    data-bs-toggle="collapse" 
+                                                    data-bs-target="#consulta{{ loop.index }}"
+                                                    aria-expanded="false">
+                                                <i class="bi bi-eye"></i>
+                                                Ver Detalles
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="collapse" id="consulta{{ loop.index }}">
+                                        <div class="card-body">
+                                            {% if expediente.resumen_clinico %}
+                                            <div class="mb-3">
+                                                <h6 class="fw-bold">
+                                                    <i class="bi bi-file-medical"></i>
+                                                    Resumen Clínico
+                                                </h6>
+                                                <p class="text-muted">{{ expediente.resumen_clinico }}</p>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            {% if expediente.datos_consulta %}
+                                            <div class="row">
+                                                {% if expediente.datos_consulta.sintomas %}
+                                                <div class="col-md-6 mb-3">
+                                                    <h6 class="fw-bold">
+                                                        <i class="bi bi-thermometer"></i>
+                                                        Síntomas
+                                                    </h6>
+                                                    <p class="text-muted small">{{ expediente.datos_consulta.sintomas }}</p>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if expediente.datos_consulta.diagnostico %}
+                                                <div class="col-md-6 mb-3">
+                                                    <h6 class="fw-bold">
+                                                        <i class="bi bi-search"></i>
+                                                        Diagnóstico
+                                                    </h6>
+                                                    <p class="text-muted small">{{ expediente.datos_consulta.diagnostico }}</p>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if expediente.datos_consulta.tratamiento %}
+                                                <div class="col-md-6 mb-3">
+                                                    <h6 class="fw-bold">
+                                                        <i class="bi bi-capsule"></i>
+                                                        Tratamiento
+                                                    </h6>
+                                                    <p class="text-muted small">{{ expediente.datos_consulta.tratamiento }}</p>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if expediente.datos_consulta.observaciones %}
+                                                <div class="col-md-6 mb-3">
+                                                    <h6 class="fw-bold">
+                                                        <i class="bi bi-chat-text"></i>
+                                                        Observaciones
+                                                    </h6>
+                                                    <p class="text-muted small">{{ expediente.datos_consulta.observaciones }}</p>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-clipboard2-x text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="text-muted mt-3">No hay consultas registradas</h4>
+                    <p class="text-muted">Este paciente no tiene consultas médicas en su expediente.</p>
+                    <a href="{{ url_for('doctor.nueva_consulta') }}?paciente={{ paciente.carnet }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i>
+                        Registrar Primera Consulta
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+.timeline-item {
+    position: relative;
+}
+
+.timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 50px;
+    top: 80px;
+    width: 2px;
+    height: calc(100% - 60px);
+    background-color: #dee2e6;
+    z-index: 1;
+}
+
+.timeline-date {
+    position: relative;
+    z-index: 2;
+}
+
+.border-start {
+    border-left-width: 4px !important;
+}
+
+@media print {
+    .btn, .btn-toolbar, .border-bottom {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+    
+    .timeline-item:not(:last-child)::after {
+        display: none;
+    }
+}
+</style>
+
+<script>
+// Función para imprimir el expediente
+document.querySelector('.btn-outline-secondary').addEventListener('click', function() {
+    // Expandir todos los detalles antes de imprimir
+    const collapses = document.querySelectorAll('.collapse');
+    collapses.forEach(collapse => {
+        collapse.classList.add('show');
+    });
+    
+    // Imprimir después de un pequeño delay para que se expandan
+    setTimeout(() => {
+        window.print();
+    }, 500);
+});
+
+// Animación suave para los collapse
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleButtons = document.querySelectorAll('[data-bs-toggle="collapse"]');
+    
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            const target = document.querySelector(this.getAttribute('data-bs-target'));
+            
+            target.addEventListener('shown.bs.collapse', function() {
+                icon.className = 'bi bi-eye-slash';
+                button.innerHTML = '<i class="bi bi-eye-slash"></i> Ocultar Detalles';
+            });
+            
+            target.addEventListener('hidden.bs.collapse', function() {
+                icon.className = 'bi bi-eye';
+                button.innerHTML = '<i class="bi bi-eye"></i> Ver Detalles';
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Consultas - Sistema Clínica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-clipboard2-pulse text-primary"></i>
+        Mis Consultas Médicas
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('doctor.nueva_consulta') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i>
+            Nueva Consulta
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-secondary">
+            <i class="bi bi-funnel"></i>
+            Filtros de Búsqueda
+        </h6>
+    </div>
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="fecha_inicio" class="form-label">Fecha Inicio</label>
+                <input type="date" 
+                       class="form-control" 
+                       id="fecha_inicio" 
+                       name="fecha_inicio" 
+                       value="{{ request.args.get('fecha_inicio', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label for="fecha_fin" class="form-label">Fecha Fin</label>
+                <input type="date" 
+                       class="form-control" 
+                       id="fecha_fin" 
+                       name="fecha_fin" 
+                       value="{{ request.args.get('fecha_fin', '') }}">
+            </div>
+            <div class="col-md-4">
+                <label for="paciente" class="form-label">Paciente (Carnet)</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="paciente" 
+                       name="paciente" 
+                       placeholder="Número de carnet"
+                       value="{{ request.args.get('paciente', '') }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-search"></i>
+                    Filtrar
+                </button>
+                <a href="{{ url_for('doctor.listar_consultas') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="bi bi-list-ul"></i>
+            Consultas Registradas ({{ consultas|length }})
+        </h6>
+    </div>
+    <div class="card-body">
+        {% if consultas %}
+        <div class="table-responsive">
+            <table class="table table-hover" id="consultasTable">
+                <thead class="table-primary">
+                    <tr>
+                        <th>ID</th>
+                        <th>Paciente</th>
+                        <th>Especialidad</th>
+                        <th>Fecha Consulta</th>
+                        <th>Tipo</th>
+                        <th>Fecha Registro</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for consulta in consultas %}
+                    <tr>
+                        <td>
+                            <strong class="text-primary">#{{ consulta.id }}</strong>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-3">
+                                    <i class="bi bi-person-circle text-info fs-4"></i>
+                                </div>
+                                <div>
+                                    <strong>{{ consulta.paciente.nombre_completo }}</strong><br>
+                                    <small class="text-muted">{{ consulta.paciente.carnet }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">
+                                {{ consulta.especialidad.nombre }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong>{{ consulta.fecha_consulta.strftime('%d/%m/%Y') }}</strong><br>
+                            <small class="text-muted">
+                                {% set dias_diff = (consulta.fecha_consulta - consulta.fecha_creacion.date()).days %}
+                                {% if dias_diff == 0 %}
+                                    Hoy
+                                {% elif dias_diff == 1 %}
+                                    Mañana
+                                {% elif dias_diff == -1 %}
+                                    Ayer
+                                {% elif dias_diff > 0 %}
+                                    En {{ dias_diff }} días
+                                {% else %}
+                                    Hace {{ -dias_diff }} días
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                {{ consulta.tipo_consulta }}
+                            </span>
+                        </td>
+                        <td>
+                            {{ consulta.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#detalleModal{{ loop.index }}"
+                                        title="Ver detalles">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <a href="{{ url_for('doctor.ver_expediente', carnet=consulta.paciente.carnet) }}" 
+                                   class="btn btn-sm btn-outline-info"
+                                   title="Ver expediente completo">
+                                    <i class="bi bi-file-medical"></i>
+                                </a>
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-warning"
+                                        title="Editar consulta">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Modal de detalles de consulta -->
+                    <div class="modal fade" id="detalleModal{{ loop.index }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        <i class="bi bi-clipboard2-pulse"></i>
+                                        Detalles de Consulta #{{ consulta.id }}
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold">Información del Paciente</h6>
+                                            <p><strong>Nombre:</strong> {{ consulta.paciente.nombre_completo }}</p>
+                                            <p><strong>Carnet:</strong> {{ consulta.paciente.carnet }}</p>
+                                            <p><strong>Edad:</strong> {{ consulta.paciente.edad }} años</p>
+                                            <p><strong>Género:</strong> {{ consulta.paciente.genero or 'No especificado' }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold">Información de la Consulta</h6>
+                                            <p><strong>Especialidad:</strong> {{ consulta.especialidad.nombre }}</p>
+                                            <p><strong>Tipo:</strong> {{ consulta.tipo_consulta }}</p>
+                                            <p><strong>Fecha Consulta:</strong> {{ consulta.fecha_consulta.strftime('%d/%m/%Y') }}</p>
+                                            <p><strong>Fecha Registro:</strong> {{ consulta.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if consulta.resumen_clinico %}
+                                    <h6 class="fw-bold mt-3">Resumen Clínico</h6>
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <p class="mb-0">{{ consulta.resumen_clinico }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if consulta.datos_consulta %}
+                                    <h6 class="fw-bold mt-3">Detalles de la Consulta</h6>
+                                    <div class="row">
+                                        {% if consulta.datos_consulta.sintomas %}
+                                        <div class="col-md-6 mb-3">
+                                            <strong>Síntomas:</strong>
+                                            <p class="text-muted">{{ consulta.datos_consulta.sintomas }}</p>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if consulta.datos_consulta.diagnostico %}
+                                        <div class="col-md-6 mb-3">
+                                            <strong>Diagnóstico:</strong>
+                                            <p class="text-muted">{{ consulta.datos_consulta.diagnostico }}</p>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if consulta.datos_consulta.tratamiento %}
+                                        <div class="col-md-6 mb-3">
+                                            <strong>Tratamiento:</strong>
+                                            <p class="text-muted">{{ consulta.datos_consulta.tratamiento }}</p>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if consulta.datos_consulta.observaciones %}
+                                        <div class="col-md-6 mb-3">
+                                            <strong>Observaciones:</strong>
+                                            <p class="text-muted">{{ consulta.datos_consulta.observaciones }}</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="modal-footer">
+                                    <a href="{{ url_for('doctor.ver_expediente', carnet=consulta.paciente.carnet) }}" 
+                                       class="btn btn-primary">
+                                        <i class="bi bi-file-medical"></i>
+                                        Ver Expediente Completo
+                                    </a>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-clipboard2-x text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">No hay consultas registradas</h4>
+            <p class="text-muted">
+                {% if request.args %}
+                No se encontraron consultas que coincidan con los filtros aplicados.
+                {% else %}
+                Comience registrando su primera consulta médica.
+                {% endif %}
+            </p>
+            {% if request.args %}
+            <a href="{{ url_for('doctor.listar_consultas') }}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left"></i>
+                Ver Todas las Consultas
+            </a>
+            {% endif %}
+            <a href="{{ url_for('doctor.nueva_consulta') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i>
+                Registrar Nueva Consulta
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if consultas %}
+<script>
+$(document).ready(function() {
+    $('#consultasTable').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+        },
+        "pageLength": 10,
+        "order": [[ 5, "desc" ]], // Ordenar por fecha de registro descendente
+        "columnDefs": [
+            { "orderable": false, "targets": 6 } // Deshabilitar ordenamiento en columna de acciones
+        ]
+    });
+});
+</script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css">
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
+{% endif %}
+{% endblock %}

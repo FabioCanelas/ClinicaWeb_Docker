@@ -26,6 +26,18 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def superadmin_required(f):
+    """
+    Decorador que requiere permisos de superadministrador
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_superadmin():
+            flash('Acceso denegado. Solo el superadministrador puede realizar esta acción.', 'error')
+            return redirect(url_for('admin.dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @admin_bp.route('/dashboard')
 @login_required
 @admin_required
@@ -65,42 +77,36 @@ def listar_doctores():
 @login_required
 @admin_required
 def nuevo_doctor():
-    """
-    Formulario para registrar un nuevo doctor
-    GET: Muestra el formulario
-    POST: Procesa y guarda el nuevo doctor
-    """
+    from ..models.models import Especialidad
+    especialidades = Especialidad.query.all()
     if request.method == 'POST':
         nombre_usuario = request.form.get('nombre_usuario')
+        nombre_completo = request.form.get('nombre_completo')
         contrasena = request.form.get('contrasena')
         confirmar_contrasena = request.form.get('confirmar_contrasena')
-        
+        especialidades_ids = request.form.getlist('especialidades')
         # Validaciones
-        if not nombre_usuario or not contrasena or not confirmar_contrasena:
-            flash('Todos los campos son obligatorios.', 'error')
-            return render_template('admin/nuevo_doctor.html')
-        
+        if not nombre_usuario or not nombre_completo or not contrasena or not confirmar_contrasena or not especialidades_ids:
+            flash('Todos los campos son obligatorios, incluyendo especialidades.', 'error')
+            return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
         if contrasena != confirmar_contrasena:
             flash('Las contraseñas no coinciden.', 'error')
-            return render_template('admin/nuevo_doctor.html')
-        
+            return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
         if len(contrasena) < 6:
             flash('La contraseña debe tener al menos 6 caracteres.', 'error')
-            return render_template('admin/nuevo_doctor.html')
-        
-        # Verificar que el nombre de usuario no exista
+            return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
         if Usuario.query.filter_by(nombre_usuario=nombre_usuario).first():
             flash('El nombre de usuario ya existe.', 'error')
-            return render_template('admin/nuevo_doctor.html')
-        
-        # Crear nuevo doctor
+            return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
         rol_doctor = Rol.query.filter_by(nombre='doctor').first()
+        especialidades_objs = Especialidad.query.filter(Especialidad.id.in_(especialidades_ids)).all()
         nuevo_doctor = Usuario(
             nombre_usuario=nombre_usuario,
+            nombre_completo=nombre_completo,
             contrasena=generate_password_hash(contrasena),
-            rol_id=rol_doctor.id
+            rol_id=rol_doctor.id,
+            especialidades=especialidades_objs
         )
-        
         try:
             db.session.add(nuevo_doctor)
             db.session.commit()
@@ -109,8 +115,7 @@ def nuevo_doctor():
         except Exception as e:
             db.session.rollback()
             flash('Error al registrar el doctor. Intente nuevamente.', 'error')
-    
-    return render_template('admin/nuevo_doctor.html')
+    return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
 
 @admin_bp.route('/especialidades')
 @login_required
@@ -171,3 +176,24 @@ def reportes():
     return render_template('admin/reportes.html',
                          consultas_por_especialidad=consultas_por_especialidad,
                          consultas_por_doctor=consultas_por_doctor)
+
+@admin_bp.route('/usuarios/eliminar/<int:usuario_id>', methods=['POST'])
+@login_required
+@superadmin_required
+def eliminar_usuario(usuario_id):
+    """
+    Elimina un usuario del sistema
+    Solo puede ser ejecutada por el superadministrador
+    """
+    usuario = Usuario.query.get_or_404(usuario_id)
+    if usuario.nombre_usuario == 'admin' or usuario.is_superadmin():
+        flash('No se puede eliminar al superadministrador.', 'error')
+        return redirect(url_for('admin.dashboard'))
+    try:
+        db.session.delete(usuario)
+        db.session.commit()
+        flash('Usuario eliminado exitosamente.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Error al eliminar el usuario.', 'error')
+    return redirect(url_for('admin.dashboard'))

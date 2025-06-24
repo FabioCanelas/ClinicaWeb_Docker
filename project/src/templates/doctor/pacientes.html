@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Pacientes - Sistema Clínica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-person-lines-fill text-primary"></i>
+        Gestión de Pacientes
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('doctor.nuevo_paciente') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i>
+            Nuevo Paciente
+        </a>
+    </div>
+</div>
+
+<!-- Barra de búsqueda -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <form method="GET" class="d-flex">
+            <input type="text" 
+                   class="form-control me-2" 
+                   name="busqueda" 
+                   placeholder="Buscar por carnet, nombres o apellidos..."
+                   value="{{ busqueda or '' }}">
+            <button type="submit" class="btn btn-outline-secondary">
+                <i class="bi bi-search"></i>
+                Buscar
+            </button>
+        </form>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if busqueda %}
+        <a href="{{ url_for('doctor.listar_pacientes') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i>
+            Limpiar Búsqueda
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="bi bi-list-ul"></i>
+            Pacientes Registrados 
+            {% if busqueda %}
+            - Resultados para "{{ busqueda }}" ({{ pacientes|length }})
+            {% else %}
+            ({{ pacientes|length }})
+            {% endif %}
+        </h6>
+    </div>
+    <div class="card-body">
+        {% if pacientes %}
+        <div class="table-responsive">
+            <table class="table table-hover" id="pacientesTable">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Carnet</th>
+                        <th>Paciente</th>
+                        <th>Edad</th>
+                        <th>Género</th>
+                        <th>Teléfono</th>
+                        <th>Email</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paciente in pacientes %}
+                    <tr>
+                        <td>
+                            <strong class="text-primary">{{ paciente.carnet }}</strong>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-3">
+                                    <i class="bi bi-person-circle text-{{ 'info' if paciente.genero == 'Masculino' else 'danger' }} fs-4"></i>
+                                </div>
+                                <div>
+                                    <strong>{{ paciente.nombre_completo }}</strong><br>
+                                    <small class="text-muted">{{ paciente.fecha_nacimiento.strftime('%d/%m/%Y') }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ paciente.edad }} años</span>
+                        </td>
+                        <td>
+                            {% if paciente.genero %}
+                            <span class="badge bg-{{ 'info' if paciente.genero == 'Masculino' else 'pink' }}">
+                                <i class="bi bi-{{ 'gender-male' if paciente.genero == 'Masculino' else 'gender-female' }}"></i>
+                                {{ paciente.genero }}
+                            </span>
+                            {% else %}
+                            <span class="text-muted">No especificado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if paciente.telefono %}
+                            <a href="tel:{{ paciente.telefono }}" class="text-decoration-none">
+                                <i class="bi bi-telephone"></i>
+                                {{ paciente.telefono }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">No registrado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if paciente.email %}
+                            <a href="mailto:{{ paciente.email }}" class="text-decoration-none">
+                                <i class="bi bi-envelope"></i>
+                                {{ paciente.email }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted">No registrado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('doctor.ver_expediente', carnet=paciente.carnet) }}" 
+                                   class="btn btn-sm btn-outline-primary" 
+                                   title="Ver expediente">
+                                    <i class="bi bi-file-medical"></i>
+                                </a>
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-success" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#nuevaConsultaModal{{ loop.index }}"
+                                        title="Nueva consulta">
+                                    <i class="bi bi-plus-circle"></i>
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-info" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#infoModal{{ loop.index }}"
+                                        title="Ver información">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Modal de información del paciente -->
+                    <div class="modal fade" id="infoModal{{ loop.index }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        <i class="bi bi-person-vcard"></i>
+                                        Información del Paciente
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold">Datos Personales</h6>
+                                            <p><strong>Carnet:</strong> {{ paciente.carnet }}</p>
+                                            <p><strong>Nombre:</strong> {{ paciente.nombre_completo }}</p>
+                                            <p><strong>Fecha de Nacimiento:</strong> {{ paciente.fecha_nacimiento.strftime('%d/%m/%Y') }}</p>
+                                            <p><strong>Edad:</strong> {{ paciente.edad }} años</p>
+                                            <p><strong>Género:</strong> {{ paciente.genero or 'No especificado' }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold">Información de Contacto</h6>
+                                            <p><strong>Teléfono:</strong> {{ paciente.telefono or 'No registrado' }}</p>
+                                            <p><strong>Email:</strong> {{ paciente.email or 'No registrado' }}</p>
+                                            <p><strong>Dirección:</strong> {{ paciente.direccion or 'No registrada' }}</p>
+                                            <p><strong>Estado:</strong> 
+                                                <span class="badge bg-{{ 'success' if paciente.estado else 'danger' }}">
+                                                    {{ 'Activo' if paciente.estado else 'Inactivo' }}
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <h6 class="fw-bold mt-3">Historial de Consultas</h6>
+                                    {% if paciente.expedientes %}
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Fecha</th>
+                                                    <th>Especialidad</th>
+                                                    <th>Doctor</th>
+                                                    <th>Tipo</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for exp in paciente.expedientes[:5] %}
+                                                <tr>
+                                                    <td>{{ exp.fecha_consulta.strftime('%d/%m/%Y') }}</td>
+                                                    <td>{{ exp.especialidad.nombre }}</td>
+                                                    <td>{{ exp.doctor.nombre_usuario if exp.doctor else 'N/A' }}</td>
+                                                    <td>{{ exp.tipo_consulta }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted">No hay consultas registradas para este paciente.</p>
+                                    {% endif %}
+                                </div>
+                                <div class="modal-footer">
+                                    <a href="{{ url_for('doctor.ver_expediente', carnet=paciente.carnet) }}" 
+                                       class="btn btn-primary">
+                                        <i class="bi bi-file-medical"></i>
+                                        Ver Expediente Completo
+                                    </a>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal para nueva consulta rápida -->
+                    <div class="modal fade" id="nuevaConsultaModal{{ loop.index }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        <i class="bi bi-plus-circle"></i>
+                                        Nueva Consulta - {{ paciente.nombre_completo }}
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="text-center">
+                                        <i class="bi bi-info-circle text-info"></i>
+                                        Se le redirigirá al formulario de nueva consulta con este paciente preseleccionado.
+                                    </p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        Cancelar
+                                    </button>
+                                    <a href="{{ url_for('doctor.nueva_consulta') }}?paciente={{ paciente.carnet }}" 
+                                       class="btn btn-primary">
+                                        <i class="bi bi-arrow-right"></i>
+                                        Continuar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            {% if busqueda %}
+            <i class="bi bi-search text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">No se encontraron pacientes</h4>
+            <p class="text-muted">No hay pacientes que coincidan con la búsqueda "{{ busqueda }}"</p>
+            <a href="{{ url_for('doctor.listar_pacientes') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Ver Todos los Pacientes
+            </a>
+            {% else %}
+            <i class="bi bi-person-x text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">No hay pacientes registrados</h4>
+            <p class="text-muted">Comience agregando un nuevo paciente al sistema</p>
+            <a href="{{ url_for('doctor.nuevo_paciente') }}" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i>
+                Registrar Primer Paciente
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if pacientes and not busqueda %}
+<script>
+// Inicializar DataTable solo si no hay búsqueda activa
+$(document).ready(function() {
+    $('#pacientesTable').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+        },
+        "pageLength": 10,
+        "order": [[ 0, "asc" ]]
+    });
+});
+</script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css">
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
+{% endif %}
+{% endblock %}

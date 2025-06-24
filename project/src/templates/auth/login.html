@@ -41,6 +41,12 @@
                     <p class="text-muted">Accede a tu cuenta del sistema</p>
                 </div>
 
+                {% if error %}
+                  <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                  </div>
+                {% endif %}
+
                 <form method="POST" class="needs-validation" novalidate>
                     <div class="mb-3">
                         <label for="nombre_usuario" class="form-label">
@@ -51,7 +57,9 @@
                                id="nombre_usuario" 
                                name="nombre_usuario" 
                                placeholder="Ingrese su usuario"
-                               required>
+                               required
+                               pattern="^\S+$"
+                               title="El usuario no debe contener espacios">
                         <div class="invalid-feedback">
                             Por favor ingrese su nombre de usuario.
                         </div>
@@ -67,15 +75,25 @@
                                    id="contrasena" 
                                    name="contrasena" 
                                    placeholder="Ingrese su contraseña"
-                                   required>
+                                   required
+                                   pattern="^(?=.*[A-Z])(?=.*[^A-Za-z0-9])\S+$"
+                                   title="Debe contener al menos una mayúscula, un carácter especial y no debe contener espacios">
                             <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
                                 <i class="bi bi-eye" id="toggleIcon"></i>
                             </button>
                         </div>
                         <div class="invalid-feedback">
-                            Por favor ingrese su contraseña.
+                            La contraseña debe contener al menos una mayúscula y un carácter especial.
+                        </div>
+                        <div class="invalid-feedback">
+                            La contraseña debe contener al menos una mayúscula, un carácter especial y no debe contener espacios.
                         </div>
                     </div>
+
+                    <div class="alert alert-info" role="alert">
+                    <i class="bi bi-info-circle"></i>
+                    La contraseña debe contener al menos <strong>una letra mayúscula</strong> y <strong>un carácter especial</strong>.
+                </div>
 
                     <div class="mb-3 form-check">
                         <input type="checkbox" class="form-check-input" id="remember" name="remember">
@@ -101,7 +119,7 @@
                 <div class="alert alert-info mt-3" role="alert">
                     <strong><i class="bi bi-info-circle"></i> Credenciales de prueba:</strong><br>
                     <small>
-                        <strong>Administrador:</strong> admin / admin123<br>
+                        <strong>Administrador:</strong> admin / Admin@123<br>
                         <strong>Doctor:</strong> (Debe ser creado por el administrador)
                     </small>
                 </div>
@@ -141,5 +159,16 @@ function togglePassword() {
         toggleIcon.className = 'bi bi-eye';
     }
 }
+
+// Validación para evitar espacios en usuario y contraseña al escribir
+const usuarioInput = document.getElementById('nombre_usuario');
+const contrasenaInput = document.getElementById('contrasena');
+
+usuarioInput.addEventListener('input', function() {
+    this.value = this.value.replace(/\s/g, '');
+});
+contrasenaInput.addEventListener('input', function() {
+    this.value = this.value.replace(/\s/g, '');
+});
 </script>
 {% endblock %}
