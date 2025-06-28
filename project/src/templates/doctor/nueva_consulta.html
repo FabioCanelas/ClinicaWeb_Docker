@@ -45,12 +45,16 @@
                                         </label>
                                         <select class="form-select" id="paciente_carnet" name="paciente_carnet" required>
                                             <option value="">Seleccionar paciente</option>
-                                            {% for paciente in pacientes %}
-                                            <option value="{{ paciente.carnet }}" 
-                                                    {% if request.args.get('paciente') == paciente.carnet %}selected{% endif %}>
-                                                {{ paciente.carnet }} - {{ paciente.nombre_completo }}
-                                            </option>
-                                            {% endfor %}
+                                            {% if pacientes %}
+                                                {% for paciente in pacientes %}
+                                                <option value="{{ paciente.carnet }}" 
+                                                        {% if request.args.get('paciente') == paciente.carnet %}selected{% endif %}>
+                                                    {{ paciente.carnet }} - {{ paciente.nombre_completo }}
+                                                </option>
+                                                {% endfor %}
+                                            {% else %}
+                                                <option value="" disabled>No hay pacientes registrados</option>
+                                            {% endif %}
                                         </select>
                                         <div class="form-text">
                                             <a href="{{ url_for('doctor.nuevo_paciente') }}" class="text-decoration-none">
@@ -70,9 +74,13 @@
                                         </label>
                                         <select class="form-select" id="especialidad_id" name="especialidad_id" required>
                                             <option value="">Seleccionar especialidad</option>
-                                            {% for especialidad in especialidades %}
-                                            <option value="{{ especialidad.id }}">{{ especialidad.nombre }}</option>
-                                            {% endfor %}
+                                            {% if especialidades %}
+                                                {% for especialidad in especialidades %}
+                                                <option value="{{ especialidad.id }}">{{ especialidad.nombre }}</option>
+                                                {% endfor %}
+                                            {% else %}
+                                                <option value="" disabled>No hay especialidades asociadas a este médico</option>
+                                            {% endif %}
                                         </select>
                                         <div class="invalid-feedback">
                                             Por favor seleccione una especialidad.
@@ -106,7 +114,7 @@
                                                class="form-control" 
                                                id="fecha_consulta" 
                                                name="fecha_consulta" 
-                                               value="{{ date.today() }}"
+                                               value="{{ hoy }}"
                                                required>
                                         <div class="invalid-feedback">
                                             Por favor seleccione la fecha de la consulta.

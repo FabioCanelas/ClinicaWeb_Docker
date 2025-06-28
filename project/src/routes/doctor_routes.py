@@ -68,8 +68,12 @@ def listar_pacientes():
     """
     busqueda = request.args.get('busqueda', '')
     
+    # Utilizar joinedload para cargar relaciones en una sola consulta (mejora rendimiento)
     if busqueda:
-        pacientes = Paciente.query.filter(
+        pacientes = Paciente.query.options(
+            db.joinedload(Paciente.expedientes).joinedload(Expediente.especialidad),
+            db.joinedload(Paciente.expedientes).joinedload(Expediente.doctor)
+        ).filter(
             db.or_(
                 Paciente.carnet.contains(busqueda),
                 Paciente.nombres.contains(busqueda),
@@ -78,7 +82,13 @@ def listar_pacientes():
             Paciente.estado == True
         ).all()
     else:
-        pacientes = Paciente.query.filter_by(estado=True).all()
+        pacientes = Paciente.query.options(
+            db.joinedload(Paciente.expedientes).joinedload(Expediente.especialidad),
+            db.joinedload(Paciente.expedientes).joinedload(Expediente.doctor)
+        ).filter_by(estado=True).all()
+    
+    # Registro para depuración
+    print(f"Pacientes encontrados: {len(pacientes)}")
     
     return render_template('doctor/pacientes.html', pacientes=pacientes, busqueda=busqueda)
 
@@ -115,6 +125,13 @@ def nuevo_paciente():
         if email and Paciente.query.filter_by(email=email).first():
             flash('Ya existe un paciente con ese email.', 'error')
             return render_template('doctor/nuevo_paciente.html')
+            
+        # Validar que el teléfono tenga exactamente 8 dígitos si se proporciona
+        if telefono:
+            import re
+            if not re.match(r'^\d{8}$', telefono):
+                flash('El número de teléfono debe tener exactamente 8 dígitos numéricos.', 'error')
+                return render_template('doctor/nuevo_paciente.html')
         
         try:
             # Convertir fecha de nacimiento
@@ -178,8 +195,15 @@ def nueva_consulta():
     GET: Muestra el formulario con pacientes y especialidades
     POST: Procesa y guarda la nueva consulta
     """
+    # Obtener todos los pacientes activos
     pacientes = Paciente.query.filter_by(estado=True).all()
-    especialidades = Especialidad.query.all()
+    
+    # Para doctores: mostrar solo las especialidades asociadas a él
+    # Para administradores: mostrar todas las especialidades
+    if current_user.is_doctor():
+        especialidades = current_user.especialidades
+    else:
+        especialidades = Especialidad.query.all()
     
     if request.method == 'POST':
         paciente_carnet = request.form.get('paciente_carnet')
@@ -228,7 +252,10 @@ def nueva_consulta():
             db.session.rollback()
             flash('Error al registrar la consulta. Intente nuevamente.', 'error')
     hoy = date.today().isoformat()
-    return render_template('doctor/nueva_consulta.html', date=date)
+    # Agregar mensaje de depuración para verificar datos
+    print(f"Pacientes disponibles: {len(pacientes)}")
+    print(f"Especialidades disponibles: {len(especialidades)}")
+    return render_template('doctor/nueva_consulta.html', pacientes=pacientes, especialidades=especialidades, hoy=hoy)
 
 @doctor_bp.route('/expediente/<carnet>')
 @login_required

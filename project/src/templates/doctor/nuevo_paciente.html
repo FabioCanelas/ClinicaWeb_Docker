@@ -121,9 +121,15 @@
                                    class="form-control" 
                                    id="telefono" 
                                    name="telefono" 
-                                   placeholder="Ej: +503 7000-0000">
+                                   placeholder="Ej: 70000000"
+                                   pattern="[0-9]{8}"
+                                   maxlength="8"
+                                   title="El número de teléfono debe tener exactamente 8 dígitos">
                             <div class="form-text">
-                                Número de contacto principal
+                                Número de contacto principal (exactamente 8 dígitos)
+                            </div>
+                            <div class="invalid-feedback">
+                                El teléfono debe contener exactamente 8 dígitos numéricos.
                             </div>
                         </div>
                     </div>
@@ -304,19 +310,29 @@ document.getElementById('fecha_nacimiento').addEventListener('change', function(
     }
 });
 
-// Formateo automático de teléfono
+// Validación de teléfono - debe tener exactamente 8 dígitos
 document.getElementById('telefono').addEventListener('input', function() {
     let valor = this.value.replace(/\D/g, ''); // Remover caracteres no numéricos
     
-    if (valor.length >= 8) {
-        // Formato: +503 7000-0000
-        if (valor.startsWith('503')) {
-            valor = '+503 ' + valor.substring(3, 7) + '-' + valor.substring(7, 11);
-        } else if (valor.length === 8) {
-            valor = valor.substring(0, 4) + '-' + valor.substring(4, 8);
-        }
+    // Limitar a 8 dígitos
+    if (valor.length > 8) {
+        valor = valor.substring(0, 8);
     }
     
+    // Validar formato
+    if (valor.length > 0 && valor.length < 8) {
+        this.classList.add('is-invalid');
+        this.setCustomValidity('El número debe tener exactamente 8 dígitos');
+    } else if (valor.length === 8) {
+        this.classList.remove('is-invalid');
+        this.classList.add('is-valid');
+        this.setCustomValidity('');
+    } else {
+        this.classList.remove('is-invalid', 'is-valid');
+        this.setCustomValidity('');
+    }
+    
+    // Actualizar el valor
     this.value = valor;
 });
 </script>

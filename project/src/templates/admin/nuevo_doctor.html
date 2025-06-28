@@ -48,19 +48,61 @@
                                 <i class="bi bi-person"></i>
                                 Nombre de Usuario *
                             </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="nombre_usuario" 
-                                   name="nombre_usuario" 
-                                   placeholder="Ej: dr.martinez"
-                                   required
-                                   pattern="^\S+$"
-                                   title="No se permiten espacios en el nombre de usuario">
-                            <div class="form-text">
-                                Este será el usuario para iniciar sesión en el sistema
+                            <div class="input-group mb-2">
+                                <span class="input-group-text" id="prefijo-addon">dr.</span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="nombre_usuario" 
+                                       name="nombre_usuario" 
+                                       placeholder="martinez"
+                                       required
+                                       pattern="^[^\s]+$"
+                                       title="No se permiten espacios en el nombre de usuario"
+                                       aria-describedby="prefijo-addon"
+                                       autocomplete="off"
+                                       onkeydown="return event.key !== ' ';"
+                                       oninput="this.value=this.value.trim().replace(/\s+/g,''); checkUsernameAvailability(this.value);">
                             </div>
+                            <div class="form-text text-info">
+                                <strong>Importante:</strong> Se añadirá automáticamente el prefijo "<b>dr.</b>" al nombre de usuario (dr.martinez).
+                                <span class="text-danger">No se permiten espacios ni caracteres especiales.</span>
+                            </div>
+                            <div id="username-feedback" class="form-text mt-1"></div>
                             <div class="invalid-feedback">
-                                Por favor ingrese un nombre de usuario válido.
+                                Por favor ingrese un nombre de usuario válido sin espacios.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="carnet_identidad" class="form-label">
+                                <i class="bi bi-card-heading"></i>
+                                Número de Carnet *
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="carnet_identidad"
+                                   name="carnet_identidad"
+                                   placeholder="Ej: 1234567"
+                                   required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese el número de carnet.
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="matricula_profesional" class="form-label">
+                                <i class="bi bi-award"></i>
+                                Matrícula Profesional *
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="matricula_profesional"
+                                   name="matricula_profesional"
+                                   placeholder="Ej: MP-12345"
+                                   required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese la matrícula profesional.
                             </div>
                         </div>
                     </div>
@@ -76,16 +118,16 @@
                                        class="form-control" 
                                        id="contrasena" 
                                        name="contrasena" 
-                                       minlength="6"
+                                       minlength="8"
                                        required
-                                       pattern="^\\S+$"
-                                       title="No se permiten espacios en la contraseña">
+                                       pattern="^(?=.*[A-Z])(?=.*[^A-Za-z0-9])\S{8,}$"
+                                       title="Debe contener al menos 8 caracteres, una mayúscula, un carácter especial y no debe contener espacios">
                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('contrasena')">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
                             <div class="form-text">
-                                Mínimo 6 caracteres
+                                Mínimo 8 caracteres, una mayúscula y un carácter especial
                             </div>
                             <div class="invalid-feedback">
                                 La contraseña debe tener al menos 6 caracteres.
@@ -102,10 +144,10 @@
                                        class="form-control" 
                                        id="confirmar_contrasena" 
                                        name="confirmar_contrasena" 
-                                       minlength="6"
+                                       minlength="8"
                                        required
-                                       pattern="^\\S+$"
-                                       title="No se permiten espacios en la contraseña">
+                                       pattern="^(?=.*[A-Z])(?=.*[^A-Za-z0-9])\S{8,}$"
+                                       title="Debe contener al menos 8 caracteres, una mayúscula, un carácter especial y no debe contener espacios">
                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmar_contrasena')">
                                     <i class="bi bi-eye"></i>
                                 </button>
@@ -230,10 +272,10 @@ document.getElementById('contrasena').addEventListener('input', function() {
     let strength = 0;
     let feedback = '';
     
-    if (password.length >= 6) strength += 25;
+    if (password.length >= 8) strength += 25;
     if (password.match(/[a-z]/)) strength += 25;
     if (password.match(/[A-Z]/)) strength += 25;
-    if (password.match(/[0-9]/) || password.match(/[^A-Za-z0-9]/)) strength += 25;
+    if (password.match(/[^A-Za-z0-9]/)) strength += 25;
     
     strengthBar.style.width = strength + '%';
     
@@ -251,25 +293,100 @@ document.getElementById('contrasena').addEventListener('input', function() {
     helpText.textContent = password.length > 0 ? feedback : 'Ingrese una contraseña para ver su fortaleza';
 });
 
-// Validación en tiempo real de confirmación de contraseña
-document.getElementById('confirmar_contrasena').addEventListener('input', function() {
-    const password = document.getElementById('contrasena').value;
-    const confirmPassword = this.value;
+// Función para verificar la disponibilidad del nombre de usuario
+function checkUsernameAvailability(username) {
+    if (!username) return;
     
-    if (confirmPassword.length > 0) {
-        if (password === confirmPassword) {
-            this.setCustomValidity('');
-            this.classList.remove('is-invalid');
-            this.classList.add('is-valid');
-        } else {
-            this.setCustomValidity('Las contraseñas no coinciden');
-            this.classList.remove('is-valid');
-            this.classList.add('is-invalid');
-        }
-    } else {
-        this.setCustomValidity('');
-        this.classList.remove('is-valid', 'is-invalid');
+    // Limpiar cualquier espacio en blanco
+    username = username.trim().replace(/\s+/g, '');
+    if (username === '') return;
+    
+    const fullUsername = 'dr.' + username; // Añadir prefijo dr.
+    const feedbackElement = document.getElementById('username-feedback');
+    const usernameInput = document.getElementById('nombre_usuario');
+    
+    if (!feedbackElement || !usernameInput) return;
+    
+    // Actualizar el valor en el campo para asegurar que no tenga espacios
+    usernameInput.value = username;
+    
+    // Mostrar indicador de carga
+    feedbackElement.innerHTML = '<i class="bi bi-hourglass-split"></i> Verificando disponibilidad...';
+    feedbackElement.className = 'form-text mt-1 text-muted';
+    
+    // Verificación real mediante AJAX
+    fetch(`/auth/check_username?username=${encodeURIComponent(fullUsername)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.available) {
+                feedbackElement.innerHTML = '<i class="bi bi-check-circle-fill"></i> Nombre de usuario disponible';
+                feedbackElement.className = 'form-text mt-1 text-success';
+                usernameInput.classList.remove('is-invalid');
+                usernameInput.classList.add('is-valid');
+            } else {
+                feedbackElement.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> ' + (data.message || 'Este nombre de usuario ya existe');
+                feedbackElement.className = 'form-text mt-1 text-danger';
+                usernameInput.classList.remove('is-valid');
+                usernameInput.classList.add('is-invalid');
+            }
+        })
+        .catch(error => {
+            console.error('Error al verificar nombre de usuario:', error);
+            feedbackElement.innerHTML = '<i class="bi bi-exclamation-circle"></i> Error al verificar disponibilidad';
+            feedbackElement.className = 'form-text mt-1 text-warning';
+        });
+}
+
+// Evitar espacios en el nombre de usuario y contraseña
+document.querySelectorAll('#nombre_usuario, #contrasena, #confirmar_contrasena').forEach(input => {
+    if (input) {
+        // Eliminar espacios en blanco al escribir
+        input.addEventListener('input', function() {
+            this.value = this.value.replace(/\s+/g, '');
+        });
+        
+        // Prevenir la inserción de espacios
+        input.addEventListener('keydown', function(e) {
+            if (e.key === ' ') {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        // Eliminar espacios al perder el foco
+        input.addEventListener('blur', function() {
+            this.value = this.value.trim().replace(/\s+/g, '');
+        });
     }
 });
+
+// Validación en tiempo real de confirmación de contraseña
+const contrasenaInput = document.getElementById('contrasena');
+const confirmarContrasenaInput = document.getElementById('confirmar_contrasena');
+
+if (contrasenaInput && confirmarContrasenaInput) {
+    confirmarContrasenaInput.addEventListener('input', function() {
+        if (this.value.length > 0) {
+            if (this.value === contrasenaInput.value) {
+                this.setCustomValidity('');
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.setCustomValidity('Las contraseñas no coinciden');
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        } else {
+            this.setCustomValidity('');
+            this.classList.remove('is-valid', 'is-invalid');
+        }
+    });
+}
+
+// Verificar disponibilidad del nombre de usuario inicial si ya hay un valor
+const nombreUsuarioInput = document.getElementById('nombre_usuario');
+if (nombreUsuarioInput && nombreUsuarioInput.value) {
+    checkUsernameAvailability(nombreUsuarioInput.value);
+}
 </script>
 {% endblock %}

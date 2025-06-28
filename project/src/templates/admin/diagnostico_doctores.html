@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnóstico de Doctores - Sistema Clínica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-tools text-warning"></i>
+        Diagnóstico de Doctores
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin.listar_doctores') }}" class="btn btn-primary">
+            <i class="bi bi-arrow-left-circle"></i>
+            Volver a Doctores
+        </a>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-warning text-white">
+        <h5 class="m-0 font-weight-bold">
+            <i class="bi bi-info-circle"></i>
+            Información de Diagnóstico
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="fw-bold">Información General</h6>
+                <p><strong>ID del Rol Doctor:</strong> {{ info.rol_doctor_id }}</p>
+                <p><strong>Cantidad de Doctores:</strong> {{ info.doctores_conteo }}</p>
+                
+                {% if info.get('usuarios_corregidos') %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i>
+                    Se corrigieron {{ info.usuarios_corregidos }} usuarios con problemas de roles
+                </div>
+                {% endif %}
+                
+                {% if info.get('problemas_logica') %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Se encontraron {{ info.problemas_logica }} inconsistencias en la lógica de roles
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="bi bi-list-ul"></i>
+            Doctores Detectados ({{ info.doctores_info|length }})
+        </h6>
+    </div>
+    <div class="card-body">
+        {% if info.doctores_info %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-primary">
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th>Nombre Completo</th>
+                        <th>Rol</th>
+                        <th>Especialidades</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doctor in info.doctores_info %}
+                    <tr>
+                        <td>{{ doctor.id }}</td>
+                        <td>{{ doctor.nombre_usuario }}</td>
+                        <td>{{ doctor.nombre_completo }}</td>
+                        <td>{{ doctor.rol_nombre }}</td>
+                        <td>
+                            {% for esp in doctor.especialidades %}
+                            <span class="badge bg-info">{{ esp }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Sin especialidades</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if doctor.is_doctor_function %}
+                            <span class="badge bg-success">OK</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inconsistente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-person-x text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">No se detectaron doctores</h4>
+            <p class="text-muted">Hay un problema crítico con la configuración de roles</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4 text-center">
+    <a href="{{ url_for('admin.corregir_doctores') }}" class="btn btn-danger me-2">
+        <i class="bi bi-wrench"></i>
+        Corregir Problemas de Roles
+    </a>
+    <a href="{{ url_for('admin.listar_doctores') }}" class="btn btn-primary me-2">
+        <i class="bi bi-arrow-left"></i>
+        Volver a la lista de doctores
+    </a>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+        <i class="bi bi-house"></i>
+        Ir al Dashboard
+    </a>
+</div>
+{% endblock %}

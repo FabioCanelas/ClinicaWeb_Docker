@@ -58,10 +58,27 @@ def create_app():
         response.headers['Expires'] = '-1'
         return response
 
-    # Crear tablas si no existen
+    # Crear tablas si no existen con manejo de errores
     with app.app_context():
-        db.create_all()
-        crear_datos_iniciales()
+        import time
+        import sqlalchemy.exc
+        
+        max_retries = 5
+        retry_count = 0
+        
+        while retry_count < max_retries:
+            try:
+                db.create_all()
+                crear_datos_iniciales()
+                print("Base de datos inicializada correctamente")
+                break
+            except sqlalchemy.exc.OperationalError as e:
+                retry_count += 1
+                if retry_count >= max_retries:
+                    print(f"Error al conectar a la base de datos después de {max_retries} intentos: {str(e)}")
+                    raise
+                print(f"Error al conectar a la base de datos. Reintentando en 5 segundos... ({retry_count}/{max_retries})")
+                time.sleep(5)
 
     return app
 
@@ -72,40 +89,56 @@ def crear_datos_iniciales():
     Incluye roles básicos y usuario administrador
     """
     from .models.models import Usuario, Rol, Especialidad
+    import sqlalchemy.exc
 
-    # Crear roles si no existen
-    if not Rol.query.filter_by(nombre='administrador').first():
-        admin_rol = Rol(nombre='administrador')
-        doctor_rol = Rol(nombre='doctor')
-        db.session.add(admin_rol)
-        db.session.add(doctor_rol)
-        db.session.commit()
-
-    # Crear usuario administrador si no existe
-    if not Usuario.query.filter_by(nombre_usuario='admin').first():
+    try:
+        # Crear roles si no existen
         admin_rol = Rol.query.filter_by(nombre='administrador').first()
-        admin_user = Usuario(
-            nombre_usuario='admin',
-            nombre_completo='Administrador General',  # <-- Campo obligatorio
-            contrasena=generate_password_hash('Admin@123'),
-            rol_id=admin_rol.id,
-            superadmin=True
-        )
-        db.session.add(admin_user)
+        if not admin_rol:
+            admin_rol = Rol(nombre='administrador')
+            doctor_rol = Rol(nombre='doctor')
+            db.session.add_all([admin_rol, doctor_rol])
+            db.session.commit()
+            print("Roles creados correctamente.")
+        else:
+            print("Roles ya existentes.")
+
+        # Crear usuario administrador si no existe
+        if not Usuario.query.filter_by(nombre_usuario='admin.superadmin').first():
+            admin_user = Usuario(
+                nombre_usuario='admin.superadmin',
+                nombre_completo='Administrador General',
+                contrasena=generate_password_hash('Superadmin@123'),
+                rol_id=admin_rol.id,
+                superadmin=True,
+                carnet_identidad='1234567'  # Agregando un valor por defecto
+            )
+            db.session.add(admin_user)
+            db.session.commit()
+            print("Usuario superadmin creado correctamente.")
+        else:
+            print("Usuario superadmin ya existe.")
+
+        # Crear especialidades básicas si no existen
+        especialidades_basicas = [
+            'Medicina General', 'Cardiología', 'Pediatría', 
+            'Ginecología', 'Dermatología', 'Neurología'
+        ]
+
+        for esp_nombre in especialidades_basicas:
+            if not Especialidad.query.filter_by(nombre=esp_nombre).first():
+                especialidad = Especialidad(nombre=esp_nombre)
+                db.session.add(especialidad)
+        
         db.session.commit()
-
-    # Crear especialidades básicas si no existen
-    especialidades_basicas = [
-        'Medicina General', 'Cardiología', 'Pediatría', 
-        'Ginecología', 'Dermatología', 'Neurología'
-    ]
-
-    for esp_nombre in especialidades_basicas:
-        if not Especialidad.query.filter_by(nombre=esp_nombre).first():
-            especialidad = Especialidad(nombre=esp_nombre)
-            db.session.add(especialidad)
-
-    db.session.commit()
+        print("Datos iniciales creados correctamente.")
+        
+    except sqlalchemy.exc.IntegrityError as e:
+        db.session.rollback()
+        print(f"Error de integridad en la base de datos: {str(e)}")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al crear datos iniciales: {str(e)}")
 
 
 if __name__ == '__main__':

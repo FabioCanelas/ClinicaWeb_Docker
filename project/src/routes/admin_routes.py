@@ -48,6 +48,7 @@ def dashboard():
     """
     # Obtener estadísticas para el dashboard
     total_doctores = Usuario.query.join(Rol).filter(Rol.nombre == 'doctor').count()
+    total_administradores = Usuario.query.join(Rol).filter(Rol.nombre == 'administrador').count()
     total_pacientes = Paciente.query.filter_by(estado=True).count()
     total_expedientes = Expediente.query.count()
     total_especialidades = Especialidad.query.count()
@@ -57,6 +58,7 @@ def dashboard():
     
     return render_template('admin/dashboard.html',
                          total_doctores=total_doctores,
+                         total_administradores=total_administradores,
                          total_pacientes=total_pacientes,
                          total_expedientes=total_expedientes,
                          total_especialidades=total_especialidades,
@@ -70,7 +72,23 @@ def listar_doctores():
     Lista todos los doctores registrados en el sistema
     Permite ver, editar y gestionar cuentas de doctores
     """
-    doctores = Usuario.query.join(Rol).filter(Rol.nombre == 'doctor').all()
+    # Obtenemos todos los doctores de forma más directa y eficiente
+    rol_doctor = Rol.query.filter_by(nombre='doctor').first()
+    if rol_doctor:
+        # Usamos un join con eager loading para cargar las relaciones en una sola consulta
+        doctores = (Usuario.query
+                   .filter_by(rol_id=rol_doctor.id)
+                   .options(db.joinedload(Usuario.especialidades))
+                   .options(db.joinedload(Usuario.expedientes))
+                   .options(db.joinedload(Usuario.rol))
+                   .all())
+        print(f"Doctores encontrados: {len(doctores)}")
+        for doc in doctores:
+            print(f"Doctor ID: {doc.id}, Nombre: {doc.nombre_completo}, CI: {doc.carnet_identidad}, MP: {doc.matricula_profesional}")
+    else:
+        doctores = []
+        print("No se encontró el rol de doctor")
+    
     return render_template('admin/doctores.html', doctores=doctores)
 
 @admin_bp.route('/doctores/nuevo', methods=['GET', 'POST'])
@@ -80,23 +98,55 @@ def nuevo_doctor():
     from ..models.models import Especialidad
     especialidades = Especialidad.query.all()
     if request.method == 'POST':
-        nombre_usuario = request.form.get('nombre_usuario')
-        nombre_completo = request.form.get('nombre_completo')
-        contrasena = request.form.get('contrasena')
-        confirmar_contrasena = request.form.get('confirmar_contrasena')
+        nombre_usuario = request.form.get('nombre_usuario', '').strip()
+        nombre_completo = request.form.get('nombre_completo', '').strip()
+        contrasena = request.form.get('contrasena', '')
+        confirmar_contrasena = request.form.get('confirmar_contrasena', '')
+        carnet_identidad = request.form.get('carnet_identidad', '').strip()
+        matricula_profesional = request.form.get('matricula_profesional', '').strip()
         especialidades_ids = request.form.getlist('especialidades')
-        # Validaciones
-        if not nombre_usuario or not nombre_completo or not contrasena or not confirmar_contrasena or not especialidades_ids:
-            flash('Todos los campos son obligatorios, incluyendo especialidades.', 'error')
+        
+        # Validaciones básicas
+        if not nombre_usuario or not nombre_completo or not contrasena or not confirmar_contrasena or not especialidades_ids or not carnet_identidad or not matricula_profesional:
+            flash('Todos los campos son obligatorios, incluyendo carnet, matrícula profesional y especialidades.', 'error')
             return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
+        
+        # Verificar si hay espacios en el nombre de usuario
+        if ' ' in nombre_usuario:
+            flash('El nombre de usuario no puede contener espacios.', 'error')
+            return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
+            
+        # Eliminar cualquier espacio y formato especial para nombres de usuario de doctores
+        nombre_usuario = nombre_usuario.replace(' ', '')
+        if not nombre_usuario.startswith('dr.'):
+            nombre_usuario = 'dr.' + nombre_usuario
+        
         if contrasena != confirmar_contrasena:
             flash('Las contraseñas no coinciden.', 'error')
             return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
-        if len(contrasena) < 6:
-            flash('La contraseña debe tener al menos 6 caracteres.', 'error')
+            
+        import re
+        if len(contrasena) < 8:
+            flash('La contraseña debe tener al menos 8 caracteres.', 'error')
             return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
+        if not re.search(r'[A-Z]', contrasena):
+            flash('La contraseña debe contener al menos una letra mayúscula.', 'error')
+            return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
+        if not re.search(r'[^A-Za-z0-9]', contrasena):
+            flash('La contraseña debe contener al menos un carácter especial.', 'error')
+            return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
+            
+        # Verificar si el nombre de usuario ya existe (después de formatear con el prefijo)
         if Usuario.query.filter_by(nombre_usuario=nombre_usuario).first():
             flash('El nombre de usuario ya existe.', 'error')
+            return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
+        # Validar que el carnet de identidad no esté duplicado
+        if Usuario.query.filter_by(carnet_identidad=carnet_identidad).first():
+            flash(f'Ya existe un usuario registrado con el carnet {carnet_identidad}.', 'error')
+            return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
+        # Validar que la matrícula profesional no esté duplicada
+        if Usuario.query.filter_by(matricula_profesional=matricula_profesional).first():
+            flash(f'Ya existe un doctor registrado con la matrícula profesional {matricula_profesional}.', 'error')
             return render_template('admin/nuevo_doctor.html', especialidades=especialidades)
         rol_doctor = Rol.query.filter_by(nombre='doctor').first()
         especialidades_objs = Especialidad.query.filter(Especialidad.id.in_(especialidades_ids)).all()
@@ -105,12 +155,14 @@ def nuevo_doctor():
             nombre_completo=nombre_completo,
             contrasena=generate_password_hash(contrasena),
             rol_id=rol_doctor.id,
+            carnet_identidad=carnet_identidad,
+            matricula_profesional=matricula_profesional,
             especialidades=especialidades_objs
         )
         try:
             db.session.add(nuevo_doctor)
             db.session.commit()
-            flash(f'Doctor {nombre_usuario} registrado exitosamente.', 'success')
+            flash(f'Doctor {nombre_completo} registrado exitosamente con usuario {nombre_usuario}.', 'success')
             return redirect(url_for('admin.listar_doctores'))
         except Exception as e:
             db.session.rollback()
@@ -197,3 +249,4 @@ def eliminar_usuario(usuario_id):
         db.session.rollback()
         flash('Error al eliminar el usuario.', 'error')
     return redirect(url_for('admin.dashboard'))
+

@@ -34,7 +34,9 @@
             </div>
             <div class="card-body">
                 {% if consultas_por_especialidad %}
-                <canvas id="especialidadesChart"></canvas>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="especialidadesChart"></canvas>
+                </div>
                 <div class="mt-3">
                     <div class="table-responsive">
                         <table class="table table-sm">
@@ -78,7 +80,9 @@
             </div>
             <div class="card-body">
                 {% if consultas_por_doctor %}
-                <canvas id="doctoresChart"></canvas>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="doctoresChart"></canvas>
+                </div>
                 <div class="mt-3">
                     <div class="table-responsive">
                         <table class="table table-sm">
@@ -201,6 +205,10 @@ const especialidadesChart = new Chart(document.getElementById('especialidadesCha
             legend: {
                 position: 'bottom'
             }
+        },
+        animation: {
+            duration: 1000,  // Duración de la animación en milisegundos
+            easing: 'easeOutQuart'
         }
     }
 });
@@ -237,6 +245,10 @@ const doctoresChart = new Chart(document.getElementById('doctoresChart'), {
             legend: {
                 display: false
             }
+        },
+        animation: {
+            duration: 1000,  // Duración de la animación en milisegundos
+            easing: 'easeOutQuart'
         }
     }
 });

@@ -55,8 +55,10 @@
     </div>
     <div class="card-body">
         {% if pacientes %}
-        <div class="table-responsive">
-            <table class="table table-hover" id="pacientesTable">
+        <!-- Contenedor principal para la tabla con márgenes y padding adecuados -->
+        <div class="container-fluid p-0">
+          <div class="table-responsive" style="width: 100%; overflow-x: auto;">
+            <table class="table table-hover table-striped" id="pacientesTable" style="width: 100%">
                 <thead class="table-primary">
                     <tr>
                         <th>Carnet</th>
@@ -70,7 +72,7 @@
                 </thead>
                 <tbody>
                     {% for paciente in pacientes %}
-                    <tr>
+                    <tr data-paciente-id="{{ paciente.carnet }}">
                         <td>
                             <strong class="text-primary">{{ paciente.carnet }}</strong>
                         </td>
@@ -142,116 +144,122 @@
                             </div>
                         </td>
                     </tr>
-
-                    <!-- Modal de información del paciente -->
-                    <div class="modal fade" id="infoModal{{ loop.index }}" tabindex="-1">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">
-                                        <i class="bi bi-person-vcard"></i>
-                                        Información del Paciente
-                                    </h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h6 class="fw-bold">Datos Personales</h6>
-                                            <p><strong>Carnet:</strong> {{ paciente.carnet }}</p>
-                                            <p><strong>Nombre:</strong> {{ paciente.nombre_completo }}</p>
-                                            <p><strong>Fecha de Nacimiento:</strong> {{ paciente.fecha_nacimiento.strftime('%d/%m/%Y') }}</p>
-                                            <p><strong>Edad:</strong> {{ paciente.edad }} años</p>
-                                            <p><strong>Género:</strong> {{ paciente.genero or 'No especificado' }}</p>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <h6 class="fw-bold">Información de Contacto</h6>
-                                            <p><strong>Teléfono:</strong> {{ paciente.telefono or 'No registrado' }}</p>
-                                            <p><strong>Email:</strong> {{ paciente.email or 'No registrado' }}</p>
-                                            <p><strong>Dirección:</strong> {{ paciente.direccion or 'No registrada' }}</p>
-                                            <p><strong>Estado:</strong> 
-                                                <span class="badge bg-{{ 'success' if paciente.estado else 'danger' }}">
-                                                    {{ 'Activo' if paciente.estado else 'Inactivo' }}
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <h6 class="fw-bold mt-3">Historial de Consultas</h6>
-                                    {% if paciente.expedientes %}
-                                    <div class="table-responsive">
-                                        <table class="table table-sm">
-                                            <thead>
-                                                <tr>
-                                                    <th>Fecha</th>
-                                                    <th>Especialidad</th>
-                                                    <th>Doctor</th>
-                                                    <th>Tipo</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for exp in paciente.expedientes[:5] %}
-                                                <tr>
-                                                    <td>{{ exp.fecha_consulta.strftime('%d/%m/%Y') }}</td>
-                                                    <td>{{ exp.especialidad.nombre }}</td>
-                                                    <td>{{ exp.doctor.nombre_usuario if exp.doctor else 'N/A' }}</td>
-                                                    <td>{{ exp.tipo_consulta }}</td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    {% else %}
-                                    <p class="text-muted">No hay consultas registradas para este paciente.</p>
-                                    {% endif %}
-                                </div>
-                                <div class="modal-footer">
-                                    <a href="{{ url_for('doctor.ver_expediente', carnet=paciente.carnet) }}" 
-                                       class="btn btn-primary">
-                                        <i class="bi bi-file-medical"></i>
-                                        Ver Expediente Completo
-                                    </a>
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                        Cerrar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Modal para nueva consulta rápida -->
-                    <div class="modal fade" id="nuevaConsultaModal{{ loop.index }}" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">
-                                        <i class="bi bi-plus-circle"></i>
-                                        Nueva Consulta - {{ paciente.nombre_completo }}
-                                    </h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <p class="text-center">
-                                        <i class="bi bi-info-circle text-info"></i>
-                                        Se le redirigirá al formulario de nueva consulta con este paciente preseleccionado.
-                                    </p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                        Cancelar
-                                    </button>
-                                    <a href="{{ url_for('doctor.nueva_consulta') }}?paciente={{ paciente.carnet }}" 
-                                       class="btn btn-primary">
-                                        <i class="bi bi-arrow-right"></i>
-                                        Continuar
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     {% endfor %}
                 </tbody>
             </table>
+          </div>
+        </div>
+        
+        <!-- Sección de modales fuera de la tabla para evitar interferencias -->
+        <div class="modales-container d-none">
+            {% for paciente in pacientes %}
+            <!-- Modal de información del paciente -->
+            <div class="modal fade" id="infoModal{{ loop.index }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-person-vcard"></i>
+                                Información del Paciente
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold">Datos Personales</h6>
+                                    <p><strong>Carnet:</strong> {{ paciente.carnet }}</p>
+                                    <p><strong>Nombre:</strong> {{ paciente.nombre_completo }}</p>
+                                    <p><strong>Fecha de Nacimiento:</strong> {{ paciente.fecha_nacimiento.strftime('%d/%m/%Y') }}</p>
+                                    <p><strong>Edad:</strong> {{ paciente.edad }} años</p>
+                                    <p><strong>Género:</strong> {{ paciente.genero or 'No especificado' }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold">Información de Contacto</h6>
+                                    <p><strong>Teléfono:</strong> {{ paciente.telefono or 'No registrado' }}</p>
+                                    <p><strong>Email:</strong> {{ paciente.email or 'No registrado' }}</p>
+                                    <p><strong>Dirección:</strong> {{ paciente.direccion or 'No registrada' }}</p>
+                                    <p><strong>Estado:</strong> 
+                                        <span class="badge bg-{{ 'success' if paciente.estado else 'danger' }}">
+                                            {{ 'Activo' if paciente.estado else 'Inactivo' }}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <h6 class="fw-bold mt-3">Historial de Consultas</h6>
+                            {% if paciente.expedientes %}
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Especialidad</th>
+                                            <th>Doctor</th>
+                                            <th>Tipo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for exp in paciente.expedientes[:5] %}
+                                        <tr>
+                                            <td>{{ exp.fecha_consulta.strftime('%d/%m/%Y') }}</td>
+                                            <td>{{ exp.especialidad.nombre }}</td>
+                                            <td>{{ exp.doctor.nombre_usuario if exp.doctor else 'N/A' }}</td>
+                                            <td>{{ exp.tipo_consulta }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted">No hay consultas registradas para este paciente.</p>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                            <a href="{{ url_for('doctor.ver_expediente', carnet=paciente.carnet) }}" 
+                               class="btn btn-primary">
+                                <i class="bi bi-file-medical"></i>
+                                Ver Expediente Completo
+                            </a>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para nueva consulta rápida -->
+            <div class="modal fade" id="nuevaConsultaModal{{ loop.index }}" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-plus-circle"></i>
+                                Nueva Consulta - {{ paciente.nombre_completo }}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-center">
+                                <i class="bi bi-info-circle text-info"></i>
+                                Se le redirigirá al formulario de nueva consulta con este paciente preseleccionado.
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                Cancelar
+                            </button>
+                            <a href="{{ url_for('doctor.nueva_consulta') }}?paciente={{ paciente.carnet }}" 
+                               class="btn btn-primary">
+                                <i class="bi bi-arrow-right"></i>
+                                Continuar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
         {% else %}
         <div class="text-center py-5">
@@ -278,22 +286,172 @@
 </div>
 {% endblock %}
 
+{% block extra_styles %}
+<style>
+/* Estilos personalizados para la tabla de pacientes */
+.table-responsive {
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+/* Asegura que el contenedor de la tabla tenga un ancho completo */
+#pacientesTable_wrapper {
+    width: 100%;
+    clear: both;
+}
+
+/* Mejora la visibilidad de las filas al pasar el ratón */
+#pacientesTable tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Mejora la visualización de DataTables en dispositivos pequeños */
+@media screen and (max-width: 767px) {
+    div.dataTables_wrapper div.dataTables_length,
+    div.dataTables_wrapper div.dataTables_filter,
+    div.dataTables_wrapper div.dataTables_info,
+    div.dataTables_wrapper div.dataTables_paginate {
+        text-align: left;
+        margin-bottom: 10px;
+    }
+    
+    /* Ajustes para la tabla en pantallas pequeñas */
+    .table-responsive {
+        border: 0;
+        margin-bottom: 0;
+    }
+}
+
+/* Asegurar que no haya elementos flotando debajo de la tabla */
+.card-body::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* Contenedor de modales oculto pero accesible para Bootstrap */
+.modales-container.d-none {
+    display: none !important;
+    visibility: hidden;
+    height: 0;
+    width: 0;
+    overflow: hidden;
+    position: absolute;
+}
+</style>
+{% endblock %}
+
 {% block extra_scripts %}
 {% if pacientes and not busqueda %}
 <script>
 // Inicializar DataTable solo si no hay búsqueda activa
 $(document).ready(function() {
+    // Solución para el problema de los modales: Moverlos al body para evitar conflictos con DataTables
+    $('.modales-container').removeClass('d-none');
+    $('.modal').appendTo('body');
+    
+    // Eliminar cualquier instancia previa de DataTable (para evitar duplicados)
+    if ($.fn.dataTable.isDataTable('#pacientesTable')) {
+        $('#pacientesTable').DataTable().destroy();
+    }
+    
+    // Inicializar DataTable con configuración mejorada
     $('#pacientesTable').DataTable({
         "language": {
             "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
         },
         "pageLength": 10,
-        "order": [[ 0, "asc" ]]
+        "order": [[ 0, "asc" ]],
+        "columnDefs": [
+            { "width": "10%", "targets": 0 },   // Carnet
+            { "width": "25%", "targets": 1 },   // Paciente
+            { "width": "5%", "targets": 2 },    // Edad
+            { "width": "10%", "targets": 3 },   // Género
+            { "width": "15%", "targets": 4 },   // Teléfono
+            { "width": "20%", "targets": 5 },   // Email
+            { "width": "15%", "targets": 6 },   // Acciones
+            { "className": "dt-center", "targets": [0, 2, 3, 6] } // Centrar contenido en columnas específicas
+        ],
+        "responsive": true,
+        "autoWidth": false,
+        "scrollX": true, 
+        "scrollCollapse": true,
+        "dom": '<"top"f>rt<"bottom"lip><"clear">',
+        "stripeClasses": ['odd', 'even'],
+        "processing": true,
+        "deferRender": true,
+        "drawCallback": function() {
+            // Asegurar que la tabla se muestre correctamente después de renderizar
+            $(window).trigger('resize');
+            
+            // Limpiar cualquier elemento adicional que pudiera estar fuera de lugar
+            $('.dataTables_scrollBody').css('overflow-y', 'hidden');
+            
+            console.log("DataTable renderizada correctamente");
+        }
     });
+    
+    // Ajustar la tabla cuando cambie el tamaño de la ventana
+    $(window).resize(function() {
+        if ($.fn.dataTable.isDataTable('#pacientesTable')) {
+            $('#pacientesTable').DataTable().columns.adjust();
+        }
+    });
+    
+    // Forzar la visualización correcta cuando la tabla se carga
+    setTimeout(function() {
+        if ($.fn.dataTable.isDataTable('#pacientesTable')) {
+            $('#pacientesTable').DataTable().columns.adjust();
+        }
+    }, 100);
 });
 </script>
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap5.min.css">
 <script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap5.min.js"></script>
+
+<!-- Script adicional para mejorar la visualización de la tabla -->
+<script>
+// Función para asegurar que la tabla se muestre completamente
+document.addEventListener('DOMContentLoaded', function() {
+    // Asegurar que la tabla se ajuste al ancho disponible
+    setTimeout(function() {
+        // Trigger resize para recalcular dimensiones de DataTables
+        window.dispatchEvent(new Event('resize'));
+        
+        // Asegurar que no haya elementos flotantes fuera de la tabla
+        const limpiarElementosFlotantes = function() {
+            // Verificar si hay elementos fuera del contenedor principal
+            const tablaContainer = document.querySelector('.table-responsive');
+            const card = document.querySelector('.card');
+            
+            // Buscar elementos que puedan estar fuera de lugar
+            const elementosAbajo = document.querySelectorAll('body > .row:not(.container .row)');
+            if (elementosAbajo.length > 0) {
+                console.log("Encontrados elementos fuera de lugar, corrigiendo...");
+                elementosAbajo.forEach(elem => elem.remove());
+            }
+            
+            // Ajustar altura del contenedor para que no haya scroll interno
+            if (tablaContainer) {
+                tablaContainer.style.maxHeight = 'none';
+            }
+            
+            // Scroll a la parte superior de la tabla
+            if (tablaContainer) {
+                tablaContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        };
+        
+        // Ejecutar limpieza de elementos
+        limpiarElementosFlotantes();
+        
+        // Volver a ejecutar después de que DataTables haya terminado completamente
+        setTimeout(limpiarElementosFlotantes, 200);
+        
+        console.log("Script de optimización de tabla ejecutado");
+    }, 500);
+});
+</script>
 {% endif %}
 {% endblock %}

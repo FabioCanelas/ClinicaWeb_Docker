@@ -3,128 +3,255 @@
 {% block title %}Registrar Usuario - Sistema Clínica{% endblock %}
 
 {% block content %}
-<div class="container-fluid vh-100">
-    <div class="row h-100 justify-content-center align-items-center">
-        <div class="col-md-6 col-lg-4">
-            <div class="login-form w-100" style="max-width: 400px;">
-                <div class="text-center mb-4">
-                    <h3 class="fw-bold text-primary">Registrar Usuario</h3>
-                    <p class="text-muted">Solo administradores pueden crear usuarios</p>
-                </div>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-person-plus text-primary"></i>
+        Registrar Nuevo Usuario
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i>
+            Volver al Login
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-person-badge"></i>
+                    {% if not current_user.is_superadmin() %}
+                    Información del Doctor
+                    {% else %}
+                    Información del Usuario
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
                 {% if error %}
-                  <div class="alert alert-danger" role="alert">
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
                     {{ error }}
-                  </div>
+                </div>
                 {% endif %}
                 {% if success %}
-                  <div class="alert alert-success" role="alert">
+                <div class="alert alert-success" role="alert">
+                    <i class="bi bi-check-circle-fill"></i>
                     {{ success }}
-                  </div>
+                </div>
                 {% endif %}
-                <div class="alert alert-info" role="alert">
-                    <i class="bi bi-info-circle"></i>
-                    La contraseña debe contener al menos <strong>8 caracteres</strong>, <strong>una letra mayúscula</strong> y <strong>un carácter especial</strong>.
-                </div>
                 <form method="POST" class="needs-validation" novalidate>
-                    <div class="mb-3">
-                        <label for="nombre_usuario" class="form-label">
-                            <i class="bi bi-person"></i> Usuario
-                        </label>
-                        <input type="text" 
-                               class="form-control form-control-lg" 
-                               id="nombre_usuario" 
-                               name="nombre_usuario" 
-                               placeholder="Ingrese el usuario"
-                               required
-                               pattern="^\S+$"
-                               title="El usuario no debe contener espacios">
-                        <div class="invalid-feedback">
-                            Por favor ingrese el nombre de usuario.
-                        </div>
-                        <div class="invalid-feedback">
-                            El usuario no debe contener espacios.
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="rol" class="form-label">
-                            <i class="bi bi-person-badge"></i> Rol
-                        </label>
-                        <select class="form-select" id="rol" name="rol" required>
-                            <option value="">Seleccione un rol</option>
-                            <option value="administrador">Administrador</option>
-                            <option value="doctor">Doctor</option>
-                        </select>
-                        <div class="invalid-feedback">
-                            Por favor seleccione un rol.
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="nombre_completo" class="form-label">
-                            <i class="bi bi-card-text"></i> Nombre completo
-                        </label>
-                        <input type="text"
-                               class="form-control form-control-lg"
-                               id="nombre_completo"
-                               name="nombre_completo"
-                               placeholder="Ingrese el nombre completo"
-                               required>
-                        <div class="invalid-feedback">
-                            Por favor ingrese el nombre completo.
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="contrasena" class="form-label">
-                            <i class="bi bi-lock"></i> Contraseña
-                        </label>
-                        <div class="input-group">
-                            <input type="password" 
-                                   class="form-control form-control-lg" 
-                                   id="contrasena" 
-                                   name="contrasena" 
-                                   placeholder="Ingrese la contraseña"
-                                   required
-                                   minlength="8"
-                                   pattern="^(?=.*[A-Z])(?=.*[^A-Za-z0-9])\S{8,}$"
-                                   title="Debe contener al menos 8 caracteres, una mayúscula, un carácter especial y no debe contener espacios">
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
-                                <i class="bi bi-eye" id="toggleIcon"></i>
-                            </button>
-                        </div>
-                        <div class="invalid-feedback">
-                            La contraseña debe contener al menos 8 caracteres, una mayúscula y un carácter especial.
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="contrasena2" class="form-label">
-                            <i class="bi bi-lock"></i> Repetir Contraseña
-                        </label>
-                        <div class="input-group">
-                            <input type="password" 
-                                   class="form-control form-control-lg" 
-                                   id="contrasena2" 
-                                   name="contrasena2" 
-                                   placeholder="Repita la contraseña"
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="nombre_completo" class="form-label">
+                                <i class="bi bi-card-text"></i> Nombre completo *
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="nombre_completo"
+                                   name="nombre_completo"
+                                   placeholder="Ej: Juan Pérez"
                                    required>
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword2()">
-                                <i class="bi bi-eye" id="toggleIcon2"></i>
-                            </button>
-                        </div>
-                        <div class="invalid-feedback">
-                            Por favor repita la contraseña.
+                            <div class="invalid-feedback">
+                                Por favor ingrese el nombre completo.
+                            </div>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-success btn-lg w-100 mb-3">
-                        <i class="bi bi-person-plus"></i>
-                        Registrar Usuario
-                    </button>
+                    
+                    <!-- Rol - Movido arriba del nombre de usuario -->
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="rol" class="form-label">
+                                <i class="bi bi-person-badge"></i> Rol *
+                            </label>
+                            {% if current_user.is_superadmin() %}
+                            <select class="form-select" id="rol" name="rol" required>
+                                <option value="">Seleccione un rol</option>
+                                <option value="administrador">Administrador</option>
+                                <option value="doctor">Doctor</option>
+                            </select>
+                            <div class="form-text">
+                                El rol determina los permisos y el formato del nombre de usuario
+                            </div>
+                            <div class="invalid-feedback">
+                                Por favor seleccione un rol.
+                            </div>
+                            {% else %}
+                            <input type="text" class="form-control" value="Doctor" readonly>
+                            <input type="hidden" name="rol" value="doctor">
+                            <div class="form-text">
+                                Los administradores solo pueden registrar doctores
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Nombre de usuario - Ahora después del rol -->
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="nombre_usuario" class="form-label">
+                                <i class="bi bi-person"></i> Nombre de Usuario * 
+                            </label>
+                            <div id="input-username-container">
+                                <!-- Este div se actualizará dinámicamente según el rol seleccionado -->
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="nombre_usuario" 
+                                       name="nombre_usuario" 
+                                       placeholder="Ingrese nombre de usuario"
+                                       required
+                                       pattern="^\S+$"
+                                       title="El usuario no debe contener espacios"
+                                       autocomplete="off">
+                            </div>
+                            <div class="form-text" id="username-help">
+                                <strong>Importante:</strong> Se añadirá automáticamente el prefijo según el rol.
+                                No se permiten espacios en el nombre de usuario.
+                            </div>
+                            <div class="invalid-feedback">
+                                Por favor ingrese un nombre de usuario válido sin espacios.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="carnet_identidad" class="form-label">
+                                <i class="bi bi-card-heading"></i> Número de Carnet *
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="carnet_identidad"
+                                   name="carnet_identidad"
+                                   placeholder="Ej: 1234567"
+                                   required>
+                            <div class="invalid-feedback">
+                                Por favor ingrese el número de carnet.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3" id="container-matricula_profesional" style="display: none;">
+                            <label for="matricula_profesional" class="form-label">
+                                <i class="bi bi-award"></i> Matrícula Profesional *
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="matricula_profesional"
+                                   name="matricula_profesional"
+                                   placeholder="Ej: MP-12345">
+                            <div class="invalid-feedback">
+                                Por favor ingrese la matrícula profesional.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Campo para seleccionar especialidades - Solo para doctores -->
+                    <div class="row" id="container-especialidades" style="display: none;">
+                        <div class="col-md-12 mb-3">
+                            <label for="especialidades" class="form-label">
+                                <i class="bi bi-clipboard2-pulse"></i> Especialidades *
+                            </label>
+                            <select class="form-select" id="especialidades" name="especialidades" multiple size="4">
+                                {% for esp in especialidades %}
+                                <option value="{{ esp.id }}">{{ esp.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Mantenga presionada la tecla Ctrl (Windows) o Cmd (Mac) para seleccionar varias.
+                            </div>
+                            <div class="invalid-feedback">
+                                Por favor seleccione al menos una especialidad.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="contrasena" class="form-label">
+                                <i class="bi bi-lock"></i> Contraseña *
+                            </label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="contrasena" 
+                                       name="contrasena" 
+                                       minlength="8"
+                                       required
+                                       pattern="^(?=.*[A-Z])(?=.*[^A-Za-z0-9])\S{8,}$"
+                                       title="Debe contener al menos 8 caracteres, una mayúscula, un carácter especial y no debe contener espacios">
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('contrasena')">
+                                    <i class="bi bi-eye" id="toggleIcon"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                Mínimo 8 caracteres, una mayúscula y un carácter especial
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="contrasena2" class="form-label">
+                                <i class="bi bi-lock-fill"></i> Confirmar Contraseña *
+                            </label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="contrasena2" 
+                                       name="contrasena2" 
+                                       minlength="8"
+                                       required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('contrasena2', 'toggleIcon2')">
+                                    <i class="bi bi-eye" id="toggleIcon2"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback">
+                                Las contraseñas deben coincidir.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Indicador de fortaleza de contraseña -->
+                    <div class="mb-3">
+                        <div class="password-strength">
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar" id="passwordStrength" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <small id="passwordHelpText" class="form-text text-muted">
+                                Ingrese una contraseña para ver su fortaleza
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Información importante:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>La contraseña debe contener al menos 8 caracteres, una letra mayúscula y un carácter especial.</li>
+                            <li>El usuario podrá cambiar su contraseña después del primer inicio de sesión.</li>
+                            <li>Asegúrese de compartir las credenciales de forma segura.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-x-circle"></i>
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus"></i>
+                            Registrar Usuario
+                        </button>
+                    </div>
                 </form>
-                <div class="text-center mt-4">
-                    <a href="{{ url_for('auth.login') }}" class="text-primary">&larr; Volver al login</a>
-                </div>
             </div>
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
 // Validación de formulario Bootstrap
 (function() {
@@ -137,43 +264,344 @@
                     event.preventDefault();
                     event.stopPropagation();
                 }
+                
+                // Validar que las contraseñas coincidan
+                const password = document.getElementById('contrasena').value;
+                const confirmPassword = document.getElementById('contrasena2').value;
+                const confirmInput = document.getElementById('contrasena2');
+                
+                if (password !== confirmPassword) {
+                    confirmInput.setCustomValidity('Las contraseñas no coinciden');
+                    event.preventDefault();
+                    event.stopPropagation();
+                } else {
+                    confirmInput.setCustomValidity('');
+                }
+                
                 form.classList.add('was-validated');
             }, false);
         });
     }, false);
 })();
-function togglePassword(inputId = 'contrasena', iconId = 'toggleIcon') {
-    const passwordInput = document.getElementById(inputId);
-    const toggleIcon = document.getElementById(iconId);
+
+// Función para mostrar/ocultar contraseñas
+function togglePassword(fieldId, iconId = 'toggleIcon') {
+    const passwordInput = document.getElementById(fieldId);
+    const button = document.querySelector(`#${fieldId} + .input-group-append .bi, #${fieldId} ~ button .bi`);
+    
     if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
-        toggleIcon.className = 'bi bi-eye-slash';
+        document.getElementById(iconId).className = 'bi bi-eye-slash';
     } else {
         passwordInput.type = 'password';
-        toggleIcon.className = 'bi bi-eye';
+        document.getElementById(iconId).className = 'bi bi-eye';
     }
 }
-function togglePassword2() {
-    const passwordInput2 = document.getElementById('contrasena2');
-    const toggleIcon2 = document.getElementById('toggleIcon2');
-    if (passwordInput2.type === 'password') {
-        passwordInput2.type = 'text';
-        toggleIcon2.className = 'bi bi-eye-slash';
+
+// Medidor de fortaleza de contraseña
+document.getElementById('contrasena').addEventListener('input', function() {
+    const password = this.value;
+    const strengthBar = document.getElementById('passwordStrength');
+    const helpText = document.getElementById('passwordHelpText');
+    
+    let strength = 0;
+    let feedback = '';
+    
+    if (password.length >= 8) strength += 25;
+    if (password.match(/[a-z]/)) strength += 25;
+    if (password.match(/[A-Z]/)) strength += 25;
+    if (password.match(/[^A-Za-z0-9]/)) strength += 25;
+    
+    strengthBar.style.width = strength + '%';
+    
+    if (strength < 50) {
+        strengthBar.className = 'progress-bar bg-danger';
+        feedback = 'Contraseña débil';
+    } else if (strength < 75) {
+        strengthBar.className = 'progress-bar bg-warning';
+        feedback = 'Contraseña moderada';
     } else {
-        passwordInput2.type = 'password';
-        toggleIcon2.className = 'bi bi-eye';
+        strengthBar.className = 'progress-bar bg-success';
+        feedback = 'Contraseña fuerte';
     }
-}
+    
+    helpText.textContent = password.length > 0 ? feedback : 'Ingrese una contraseña para ver su fortaleza';
+});
+
+// Validación en tiempo real de confirmación de contraseña
+document.getElementById('contrasena2').addEventListener('input', function() {
+    const password = document.getElementById('contrasena').value;
+    const confirmPassword = this.value;
+    
+    if (confirmPassword.length > 0) {
+        if (password === confirmPassword) {
+            this.setCustomValidity('');
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else {
+            this.setCustomValidity('Las contraseñas no coinciden');
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+        }
+    } else {
+        this.setCustomValidity('');
+        this.classList.remove('is-valid', 'is-invalid');
+    }
+});
+
 // Validación para evitar espacios en usuario y contraseña al escribir
 const usuarioInput = document.getElementById('nombre_usuario');
 const contrasenaInput = document.getElementById('contrasena');
 if(usuarioInput && contrasenaInput) {
+    // Eliminar espacios en blanco al escribir
     usuarioInput.addEventListener('input', function() {
-        this.value = this.value.replace(/\s/g, '');
+        this.value = this.value.replace(/\s+/g, '');
     });
+    
+    // Prevenir la inserción de espacios en el nombre de usuario
+    usuarioInput.addEventListener('keydown', function(e) {
+        if (e.key === ' ') {
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // Eliminar espacios al perder el foco
+    usuarioInput.addEventListener('blur', function() {
+        this.value = this.value.trim().replace(/\s+/g, '');
+    });
+    
+    // Para la contraseña
     contrasenaInput.addEventListener('input', function() {
         this.value = this.value.replace(/\s/g, '');
     });
+}
+
+// Función para mostrar/ocultar los campos de doctor según el rol seleccionado
+const rolSelect = document.getElementById('rol');
+const containerMatricula = document.getElementById('container-matricula_profesional');
+const containerEspecialidades = document.getElementById('container-especialidades');
+const matriculaProfesional = document.getElementById('matricula_profesional');
+const especialidades = document.getElementById('especialidades');
+const inputUsernameContainer = document.getElementById('input-username-container');
+const usernameHelp = document.getElementById('username-help');
+const nombreUsuarioInput = document.getElementById('nombre_usuario');
+
+// Función para actualizar el campo de nombre de usuario según el rol
+function updateUsernameField(rol) {
+    // Guardar el valor actual sin prefijo
+    let currentValue = nombreUsuarioInput ? nombreUsuarioInput.value : '';
+    // Eliminar prefijos existentes si los hay
+    if (currentValue.startsWith('dr.')) {
+        currentValue = currentValue.substring(3);
+    } else if (currentValue.startsWith('admin.')) {
+        currentValue = currentValue.substring(6);
+    }
+    
+    // Eliminar espacios si los hay
+    currentValue = currentValue.trim().replace(/\s+/g, '');
+    
+    // Crear el nuevo input con el prefijo adecuado
+    let newHtml = '';
+    if (rol === 'doctor') {
+        newHtml = `
+            <div class="input-group">
+                <span class="input-group-text">dr.</span>
+                <input type="text" 
+                       class="form-control" 
+                       id="nombre_usuario" 
+                       name="nombre_usuario" 
+                       placeholder="martinez"
+                       value="${currentValue}"
+                       required
+                       pattern="^[^\s]+$"
+                       title="El usuario no debe contener espacios"
+                       autocomplete="off"
+                       onkeydown="return event.key !== ' ';"
+                       oninput="this.value=this.value.trim().replace(/\\s+/g,'')">
+            </div>
+        `;
+        usernameHelp.innerHTML = "<strong>Importante:</strong> Se añadirá automáticamente el prefijo '<b>dr.</b>' al nombre de usuario (dr.martinez). <span class='text-danger'>No se permiten espacios.</span>";
+    } else if (rol === 'administrador') {
+        newHtml = `
+            <div class="input-group">
+                <span class="input-group-text">admin.</span>
+                <input type="text" 
+                       class="form-control" 
+                       id="nombre_usuario" 
+                       name="nombre_usuario" 
+                       placeholder="juan"
+                       value="${currentValue}"
+                       required
+                       pattern="^[^\s]+$"
+                       title="El usuario no debe contener espacios"
+                       autocomplete="off"
+                       onkeydown="return event.key !== ' ';"
+                       oninput="this.value=this.value.trim().replace(/\\s+/g,'')">
+            </div>
+        `;
+        usernameHelp.innerHTML = "<strong>Importante:</strong> Se añadirá automáticamente el prefijo '<b>admin.</b>' al nombre de usuario (admin.juan). <span class='text-danger'>No se permiten espacios.</span>";
+    } else {
+        newHtml = `
+            <input type="text" 
+                   class="form-control" 
+                   id="nombre_usuario" 
+                   name="nombre_usuario" 
+                   placeholder="Ingrese nombre de usuario"
+                   value="${currentValue}"
+                   required
+                   pattern="^[^\s]+$"
+                   title="El usuario no debe contener espacios"
+                   autocomplete="off"
+                   onkeydown="return event.key !== ' ';"
+                   oninput="this.value=this.value.trim().replace(/\\s+/g,'')">
+        `;
+        usernameHelp.innerHTML = "<strong>Importante:</strong> Este será el usuario para iniciar sesión en el sistema. <span class='text-danger'>No se permiten espacios.</span>";
+    }
+    
+    // Actualizar el contenedor
+    if (inputUsernameContainer) {
+        inputUsernameContainer.innerHTML = newHtml;
+        
+        // Añadir el evento oninput para prevenir espacios (para asegurar compatibilidad con todos los navegadores)
+        const nuevoInput = document.getElementById('nombre_usuario');
+        if (nuevoInput) {
+            nuevoInput.addEventListener('input', function() {
+                this.value = this.value.replace(/\s/g, '');
+            });
+            
+            // Mostrar mensaje de validación en tiempo real
+            nuevoInput.addEventListener('blur', function() {
+                checkUserNameAvailability(this.value, rol);
+            });
+        }
+    }
+}
+
+if (rolSelect) {
+    rolSelect.addEventListener('change', function() {
+        if (this.value === 'doctor') {
+            containerMatricula.style.display = 'block';
+            containerEspecialidades.style.display = 'block';
+            matriculaProfesional.required = true;
+            especialidades.required = true;
+            // Actualizar campo de usuario para doctores
+            updateUsernameField('doctor');
+        } else if (this.value === 'administrador') {
+            containerMatricula.style.display = 'none';
+            containerEspecialidades.style.display = 'none';
+            matriculaProfesional.required = false;
+            especialidades.required = false;
+            // Actualizar campo de usuario para administradores
+            updateUsernameField('administrador');
+        } else {
+            containerMatricula.style.display = 'none';
+            containerEspecialidades.style.display = 'none';
+            matriculaProfesional.required = false;
+            especialidades.required = false;
+            // Restablecer campo de usuario
+            updateUsernameField('');
+        }
+    });
+    
+    // Verificar el estado inicial
+    if (rolSelect.value === 'doctor') {
+        containerMatricula.style.display = 'block';
+        containerEspecialidades.style.display = 'block';
+        matriculaProfesional.required = true;
+        especialidades.required = true;
+        // Inicializar campo de usuario para doctores
+        updateUsernameField('doctor');
+    } else if (rolSelect.value === 'administrador') {
+        // Inicializar campo de usuario para administradores
+        updateUsernameField('administrador');
+    }
+} else {
+    // Si no hay selector de rol, asumimos que es formulario solo para doctores
+    containerMatricula.style.display = 'block';
+    containerEspecialidades.style.display = 'block';
+    matriculaProfesional.required = true;
+    especialidades.required = true;
+    // Inicializar campo de usuario para doctores
+    updateUsernameField('doctor');
+}
+
+// Si no hay un superadmin (solo se permite registrar doctores), inicializar el campo de usuario con prefijo "dr."
+    if (!rolSelect) {
+        // Si no hay selector de rol, significa que solo se pueden registrar doctores
+        updateUsernameField('doctor');
+        // Mostrar campos específicos para doctores
+        containerMatricula.style.display = 'block';
+        containerEspecialidades.style.display = 'block';
+        if (matriculaProfesional) matriculaProfesional.required = true;
+        if (especialidades) especialidades.required = true;
+    } else {
+        // Si hay selector de rol, actualizar según el valor inicial
+        const initialRol = rolSelect.value;
+        if (initialRol === 'doctor') {
+            updateUsernameField('doctor');
+            containerMatricula.style.display = 'block';
+            containerEspecialidades.style.display = 'block';
+            if (matriculaProfesional) matriculaProfesional.required = true;
+            if (especialidades) especialidades.required = true;
+        } else if (initialRol === 'administrador') {
+            updateUsernameField('administrador');
+        }
+    }
+
+// Función para verificar la disponibilidad del nombre de usuario
+function checkUserNameAvailability(username, rol) {
+    // Si está vacío no verificamos
+    if (!username) return;
+    
+    // Añadimos el prefijo según el rol para la verificación
+    let fullUsername = username;
+    if (rol === 'doctor' && !username.startsWith('dr.')) {
+        fullUsername = 'dr.' + username;
+    } else if (rol === 'administrador' && !username.startsWith('admin.')) {
+        fullUsername = 'admin.' + username;
+    }
+    
+    const nuevoInput = document.getElementById('nombre_usuario');
+    if (!nuevoInput) return;
+    
+    // Mostrar un indicador de carga
+    const parentElement = nuevoInput.parentElement;
+    let feedbackElement = parentElement.querySelector('.username-feedback');
+    if (!feedbackElement) {
+        feedbackElement = document.createElement('div');
+        feedbackElement.className = 'username-feedback form-text mt-1';
+        if (parentElement.classList.contains('input-group')) {
+            parentElement.parentElement.appendChild(feedbackElement);
+        } else {
+            parentElement.appendChild(feedbackElement);
+        }
+    }
+    
+    feedbackElement.innerHTML = '<i class="bi bi-hourglass-split"></i> Verificando disponibilidad...';
+    feedbackElement.className = 'username-feedback form-text mt-1 text-muted';
+    
+    // Verificación real mediante AJAX
+    fetch(`/auth/check_username?username=${encodeURIComponent(fullUsername)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.available) {
+                feedbackElement.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Nombre de usuario disponible';
+                feedbackElement.className = 'username-feedback form-text mt-1 text-success';
+                nuevoInput.classList.remove('is-invalid');
+                nuevoInput.classList.add('is-valid');
+            } else {
+                feedbackElement.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-danger"></i> Este nombre de usuario ya existe';
+                feedbackElement.className = 'username-feedback form-text mt-1 text-danger';
+                nuevoInput.classList.remove('is-valid');
+                nuevoInput.classList.add('is-invalid');
+            }
+        })
+        .catch(error => {
+            console.error('Error al verificar nombre de usuario:', error);
+            feedbackElement.innerHTML = '<i class="bi bi-exclamation-circle"></i> Error al verificar disponibilidad';
+            feedbackElement.className = 'username-feedback form-text mt-1 text-warning';
+        });
 }
 </script>
 {% endblock %}

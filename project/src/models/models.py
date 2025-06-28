@@ -33,6 +33,8 @@ class Usuario(UserMixin, db.Model):
     rol_id = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=False)
     superadmin = db.Column(db.Boolean, default=False)
     nombre_completo = db.Column(db.String(150), nullable=False)
+    carnet_identidad = db.Column(db.String(20), unique=True, nullable=True)  # Número de carnet para doctores - debe ser único
+    matricula_profesional = db.Column(db.String(30), unique=True, nullable=True)  # Matrícula profesional para doctores - debe ser única
 
     expedientes = db.relationship('Expediente', backref='doctor', lazy=True)
     especialidades = db.relationship('Especialidad', secondary=doctor_especialidad, backref='doctores')
