@@ -6,8 +6,8 @@ WORKDIR /app
 COPY requirements.txt .
 COPY wait-for-it.sh .
 
-# Asegurarse de que wait-for-it.sh tenga permisos de ejecución desde la construcción
-RUN chmod +x ./wait-for-it.sh
+# Asegurarse de que wait-for-it.sh tenga permisos de ejecución y terminaciones Unix
+RUN chmod +x ./wait-for-it.sh && sed -i 's/\r$//' ./wait-for-it.sh
 
 RUN pip install --no-cache-dir -r requirements.txt
 
