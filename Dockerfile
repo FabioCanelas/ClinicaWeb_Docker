@@ -1,18 +1,31 @@
-FROM python:3.11
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Copia primero los archivos necesarios para la instalación
+# Instalar dependencias del sistema necesarias
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copia los archivos de dependencias
 COPY requirements.txt .
-COPY wait-for-it.sh .
 
-# Asegurarse de que wait-for-it.sh tenga permisos de ejecución y terminaciones Unix
-RUN chmod +x ./wait-for-it.sh && sed -i 's/\r$//' ./wait-for-it.sh
-
+# Instalar dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copia el script de espera para la base de datos
+COPY wait-for-db.py .
 
 # Copia el resto del código del proyecto
 COPY . .
 
-# Comando por defecto: espera a que MySQL esté listo y luego ejecuta Flask
-CMD ["bash", "-c", "./wait-for-it.sh db:3306 -t 60 -- python run.py"]
+# Exponer el puerto
+EXPOSE 5000
+
+# Script de salud para verificar que la app esté funcionando
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5000/ || exit 1
+
+# Comando por defecto
+CMD ["python", "wait-for-db.py"]

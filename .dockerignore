@@ -1,15 +1,62 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.so
+
+# Entornos virtuales
 env/
 venv/
+ENV/
+.venv/
+
+# Base de datos locales
 *.db
 *.sqlite3
+*.sql
+
+# Logs
 *.log
+logs/
+
+# Git
 .git
 .gitignore
+.gitattributes
+
+# Archivos del sistema
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Variables de entorno
 .env
 .env.*
+
+# Node.js (si existiera)
 node_modules/
+package-lock.json
+yarn.lock
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Documentación y archivos de desarrollo
+README.md
+LICENSE
+MAINTENANCE.md
+*.md
+
+# Scripts de sistema
+*.bat
+*.sh
+
+# Archivos temporales
+*.tmp
+*.bak
+*.backup
