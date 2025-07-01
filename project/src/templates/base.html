@@ -63,6 +63,14 @@
                                 Doctores
                             </a>
                         </li>
+                        {% if current_user.is_superadmin() %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.listar_administradores') }}">
+                                <i class="bi bi-shield-check"></i>
+                                Administradores
+                            </a>
+                        </li>
+                        {% endif %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('admin.listar_especialidades') }}">
                                 <i class="bi bi-heart-pulse"></i>
@@ -79,6 +87,12 @@
                             <a class="nav-link" href="{{ url_for('auth.register') }}">
                                 <i class="bi bi-person-plus"></i>
                                 Registrar Usuario
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.cambiar_contrasena_propia') }}">
+                                <i class="bi bi-key"></i>
+                                Mi Contraseña
                             </a>
                         </li>
                         {% else %}

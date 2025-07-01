@@ -16,6 +16,44 @@
     </div>
 </div>
 
+<!-- Mensajes flash -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="row mb-3">
+            <div class="col-12">
+                {% for category, message in messages %}
+                    {% if category == 'success' %}
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% elif category == 'error' %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% elif category == 'warning' %}
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% elif category == 'info' %}
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <strong>{{ message }}</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+{% endwith %}
+
 <!-- Card principal que contiene la tabla de doctores -->
 <div class="card shadow mb-4">
     <div class="card-header py-3">
@@ -93,13 +131,24 @@
                                     <i class="bi bi-eye"></i>
                                 </button>
                                 <!-- Editar -->
-                                <button type="button" class="btn btn-sm btn-outline-warning">
+                                <a href="{{ url_for('admin.editar_usuario', usuario_id=doctor.id) }}" 
+                                   class="btn btn-sm btn-outline-warning">
                                     <i class="bi bi-pencil"></i>
-                                </button>
+                                </a>
+                                <!-- Resetear Password -->
+                                <form method="POST" action="{{ url_for('admin.resetear_password_doctor', doctor_id=doctor.id) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                            onclick="return confirm('¿Resetear la contraseña de {{ doctor.nombre_completo }}?\n\nSe generará una contraseña temporal con el formato: Dr{{ doctor.carnet_identidad }}*\n\nEl doctor deberá cambiarla en su próximo inicio de sesión.')">
+                                        <i class="bi bi-key"></i>
+                                    </button>
+                                </form>
                                 <!-- Eliminar -->
-                                <button type="button" class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                <form method="POST" action="{{ url_for('admin.eliminar_usuario', usuario_id=doctor.id) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('¿Está COMPLETAMENTE SEGURO de eliminar al doctor {{ doctor.nombre_completo }}? Esta acción eliminará también todos sus expedientes y NO se puede deshacer.')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>

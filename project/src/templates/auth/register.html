@@ -102,13 +102,12 @@
                                        name="nombre_usuario" 
                                        placeholder="Ingrese nombre de usuario"
                                        required
-                                       pattern="^\S+$"
+                                       pattern="^[a-zA-Z0-9_-]+$"
                                        title="El usuario no debe contener espacios"
                                        autocomplete="off">
                             </div>
                             <div class="form-text" id="username-help">
                                 <strong>Importante:</strong> Se añadirá automáticamente el prefijo según el rol.
-                                No se permiten espacios en el nombre de usuario.
                             </div>
                             <div class="invalid-feedback">
                                 Por favor ingrese un nombre de usuario válido sin espacios.
@@ -355,12 +354,12 @@ const contrasenaInput = document.getElementById('contrasena');
 if(usuarioInput && contrasenaInput) {
     // Eliminar espacios en blanco al escribir
     usuarioInput.addEventListener('input', function() {
-        this.value = this.value.replace(/\s+/g, '');
+        this.value = this.value.replace(/[^a-zA-Z0-9_-]/g, '');
     });
     
     // Prevenir la inserción de espacios en el nombre de usuario
     usuarioInput.addEventListener('keydown', function(e) {
-        if (e.key === ' ') {
+        if (e.key === ' ' || e.key === '.') {
             e.preventDefault();
             return false;
         }
@@ -368,7 +367,7 @@ if(usuarioInput && contrasenaInput) {
     
     // Eliminar espacios al perder el foco
     usuarioInput.addEventListener('blur', function() {
-        this.value = this.value.trim().replace(/\s+/g, '');
+        this.value = this.value.replace(/[^a-zA-Z0-9_-]/g, '');
     });
     
     // Para la contraseña
@@ -387,19 +386,132 @@ const inputUsernameContainer = document.getElementById('input-username-container
 const usernameHelp = document.getElementById('username-help');
 const nombreUsuarioInput = document.getElementById('nombre_usuario');
 
+// Función para limpiar prefijos del nombre de usuario
+function cleanUsernameFromPrefixes(username) {
+    if (!username) return '';
+    
+    // Eliminar prefijos conocidos (case insensitive)
+    let cleanedUsername = username;
+    if (cleanedUsername.toLowerCase().startsWith('dr.')) {
+        cleanedUsername = cleanedUsername.substring(3);
+    } else if (cleanedUsername.toLowerCase().startsWith('admin.')) {
+        cleanedUsername = cleanedUsername.substring(6);
+    }
+    
+    // Eliminar espacios y caracteres no válidos para nombres de usuario
+    return cleanedUsername.trim().replace(/\s+/g, '').replace(/[^a-zA-Z0-9_-]/g, '');
+}
+
+// Función para mostrar advertencia sobre prefijos
+function showPrefixWarning() {
+    const nuevoInput = document.getElementById('nombre_usuario');
+    if (!nuevoInput) return;
+    
+    const parentElement = nuevoInput.closest('.col-md-12');
+    let warningElement = parentElement.querySelector('.prefix-warning');
+    
+    if (!warningElement) {
+        warningElement = document.createElement('div');
+        warningElement.className = 'prefix-warning alert alert-warning alert-dismissible fade show mt-2';
+        warningElement.style.fontSize = '0.9em';
+        warningElement.innerHTML = `
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Atención:</strong> No es necesario escribir "dr." o "admin." - el prefijo se añade automáticamente.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        parentElement.appendChild(warningElement);
+        
+        // Auto-ocultar después de 4 segundos
+        setTimeout(() => {
+            if (warningElement && warningElement.parentNode) {
+                warningElement.remove();
+            }
+        }, 4000);
+    }
+}
+
+// Función para configurar la validación del campo de nombre de usuario
+function setupUsernameValidation(inputElement, rol) {
+    // Prevenir entrada de prefijos y espacios
+    inputElement.addEventListener('input', function(e) {
+        const originalValue = e.target.value;
+        let value = this.value;
+        
+        // Limpiar prefijos si el usuario los escribe
+        const cleanedValue = cleanUsernameFromPrefixes(value);
+        
+        // Si se detectaron prefijos, mostrar advertencia
+        if (cleanedValue !== value && (value.toLowerCase().includes('dr.') || value.toLowerCase().includes('admin.'))) {
+            showPrefixWarning();
+        }
+        
+        // Limpiar caracteres no válidos
+        const finalValue = cleanedValue.replace(/[^a-zA-Z0-9_-]/g, '');
+        
+        // Actualizar el valor si cambió
+        if (this.value !== finalValue) {
+            this.value = finalValue;
+        }
+    });
+    
+    // Prevenir pegado de prefijos
+    inputElement.addEventListener('paste', function(e) {
+        e.preventDefault();
+        let pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        const originalPasted = pastedText;
+        pastedText = cleanUsernameFromPrefixes(pastedText);
+        
+        // Si se detectaron prefijos en el pegado, mostrar advertencia
+        if (originalPasted !== pastedText && (originalPasted.toLowerCase().includes('dr.') || originalPasted.toLowerCase().includes('admin.'))) {
+            showPrefixWarning();
+        }
+        
+        this.value = pastedText;
+        
+        // Disparar evento input para otras validaciones
+        this.dispatchEvent(new Event('input'));
+        
+        // Verificar disponibilidad si hay valor
+        if (this.value) {
+            checkUserNameAvailability(this.value, rol);
+        }
+    });
+    
+    // Validar al perder el foco
+    inputElement.addEventListener('blur', function() {
+        const cleanValue = cleanUsernameFromPrefixes(this.value);
+        if (cleanValue !== this.value) {
+            this.value = cleanValue;
+        }
+        
+        if (this.value) {
+            checkUserNameAvailability(this.value, rol);
+        }
+    });
+    
+    // Prevenir teclas específicas
+    inputElement.addEventListener('keydown', function(e) {
+        // Prevenir espacios
+        if (e.key === ' ') {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Prevenir punto si podría formar un prefijo
+        if (e.key === '.' && (this.value.toLowerCase() === 'dr' || this.value.toLowerCase() === 'admin')) {
+            e.preventDefault();
+            showPrefixWarning();
+            return false;
+        }
+    });
+}
+
 // Función para actualizar el campo de nombre de usuario según el rol
 function updateUsernameField(rol) {
     // Guardar el valor actual sin prefijo
     let currentValue = nombreUsuarioInput ? nombreUsuarioInput.value : '';
-    // Eliminar prefijos existentes si los hay
-    if (currentValue.startsWith('dr.')) {
-        currentValue = currentValue.substring(3);
-    } else if (currentValue.startsWith('admin.')) {
-        currentValue = currentValue.substring(6);
-    }
-    
-    // Eliminar espacios si los hay
-    currentValue = currentValue.trim().replace(/\s+/g, '');
+    // Limpiar prefijos existentes si los hay
+    currentValue = cleanUsernameFromPrefixes(currentValue);
     
     // Crear el nuevo input con el prefijo adecuado
     let newHtml = '';
@@ -414,14 +526,12 @@ function updateUsernameField(rol) {
                        placeholder="martinez"
                        value="${currentValue}"
                        required
-                       pattern="^[^\s]+$"
-                       title="El usuario no debe contener espacios"
-                       autocomplete="off"
-                       onkeydown="return event.key !== ' ';"
-                       oninput="this.value=this.value.trim().replace(/\\s+/g,'')">
+                       pattern="^[a-zA-Z0-9_-]+$"
+                       title="El usuario no debe contener espacios ni prefijos"
+                       autocomplete="off">
             </div>
         `;
-        usernameHelp.innerHTML = "<strong>Importante:</strong> Se añadirá automáticamente el prefijo '<b>dr.</b>' al nombre de usuario (dr.martinez). <span class='text-danger'>No se permiten espacios.</span>";
+        usernameHelp.innerHTML = "<strong>Importante:</strong> Se añadirá automáticamente el prefijo '<b>dr.</b>' al nombre de usuario (dr.martinez).";
     } else if (rol === 'administrador') {
         newHtml = `
             <div class="input-group">
@@ -433,14 +543,12 @@ function updateUsernameField(rol) {
                        placeholder="juan"
                        value="${currentValue}"
                        required
-                       pattern="^[^\s]+$"
-                       title="El usuario no debe contener espacios"
-                       autocomplete="off"
-                       onkeydown="return event.key !== ' ';"
-                       oninput="this.value=this.value.trim().replace(/\\s+/g,'')">
+                       pattern="^[a-zA-Z0-9_-]+$"
+                       title="El usuario no debe contener espacios ni prefijos"
+                       autocomplete="off">
             </div>
         `;
-        usernameHelp.innerHTML = "<strong>Importante:</strong> Se añadirá automáticamente el prefijo '<b>admin.</b>' al nombre de usuario (admin.juan). <span class='text-danger'>No se permiten espacios.</span>";
+        usernameHelp.innerHTML = "<strong>Importante:</strong> Se añadirá automáticamente el prefijo '<b>admin.</b>' al nombre de usuario (admin.juan).";
     } else {
         newHtml = `
             <input type="text" 
@@ -450,30 +558,21 @@ function updateUsernameField(rol) {
                    placeholder="Ingrese nombre de usuario"
                    value="${currentValue}"
                    required
-                   pattern="^[^\s]+$"
+                   pattern="^[a-zA-Z0-9_-]+$"
                    title="El usuario no debe contener espacios"
-                   autocomplete="off"
-                   onkeydown="return event.key !== ' ';"
-                   oninput="this.value=this.value.trim().replace(/\\s+/g,'')">
+                   autocomplete="off">
         `;
-        usernameHelp.innerHTML = "<strong>Importante:</strong> Este será el usuario para iniciar sesión en el sistema. <span class='text-danger'>No se permiten espacios.</span>";
+        usernameHelp.innerHTML = "<strong>Importante:</strong> Este será el usuario para iniciar sesión en el sistema.";
     }
     
     // Actualizar el contenedor
     if (inputUsernameContainer) {
         inputUsernameContainer.innerHTML = newHtml;
         
-        // Añadir el evento oninput para prevenir espacios (para asegurar compatibilidad con todos los navegadores)
+        // Configurar validación avanzada para el nuevo input
         const nuevoInput = document.getElementById('nombre_usuario');
         if (nuevoInput) {
-            nuevoInput.addEventListener('input', function() {
-                this.value = this.value.replace(/\s/g, '');
-            });
-            
-            // Mostrar mensaje de validación en tiempo real
-            nuevoInput.addEventListener('blur', function() {
-                checkUserNameAvailability(this.value, rol);
-            });
+            setupUsernameValidation(nuevoInput, rol);
         }
     }
 }
@@ -526,39 +625,19 @@ if (rolSelect) {
     updateUsernameField('doctor');
 }
 
-// Si no hay un superadmin (solo se permite registrar doctores), inicializar el campo de usuario con prefijo "dr."
-    if (!rolSelect) {
-        // Si no hay selector de rol, significa que solo se pueden registrar doctores
-        updateUsernameField('doctor');
-        // Mostrar campos específicos para doctores
-        containerMatricula.style.display = 'block';
-        containerEspecialidades.style.display = 'block';
-        if (matriculaProfesional) matriculaProfesional.required = true;
-        if (especialidades) especialidades.required = true;
-    } else {
-        // Si hay selector de rol, actualizar según el valor inicial
-        const initialRol = rolSelect.value;
-        if (initialRol === 'doctor') {
-            updateUsernameField('doctor');
-            containerMatricula.style.display = 'block';
-            containerEspecialidades.style.display = 'block';
-            if (matriculaProfesional) matriculaProfesional.required = true;
-            if (especialidades) especialidades.required = true;
-        } else if (initialRol === 'administrador') {
-            updateUsernameField('administrador');
-        }
-    }
-
 // Función para verificar la disponibilidad del nombre de usuario
 function checkUserNameAvailability(username, rol) {
+    // Limpiar el username de prefijos antes de verificar
+    username = cleanUsernameFromPrefixes(username);
+    
     // Si está vacío no verificamos
     if (!username) return;
     
     // Añadimos el prefijo según el rol para la verificación
     let fullUsername = username;
-    if (rol === 'doctor' && !username.startsWith('dr.')) {
+    if (rol === 'doctor') {
         fullUsername = 'dr.' + username;
-    } else if (rol === 'administrador' && !username.startsWith('admin.')) {
+    } else if (rol === 'administrador') {
         fullUsername = 'admin.' + username;
     }
     

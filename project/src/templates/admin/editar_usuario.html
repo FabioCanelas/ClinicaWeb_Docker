@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Usuario - Sistema Clínica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-person-gear text-primary"></i>
+        Editar Usuario
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        {% if usuario.is_admin() %}
+            <a href="{{ url_for('admin.listar_administradores') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Volver a Administradores
+            </a>
+        {% else %}
+            <a href="{{ url_for('admin.listar_doctores') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+                Volver a Doctores
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="bi bi-person-badge"></i>
+                    Editando: {{ usuario.nombre_completo }}
+                    {% if usuario.is_superadmin() %}
+                        <span class="badge bg-danger ms-2">SUPERADMIN</span>
+                    {% elif usuario.is_admin() %}
+                        <span class="badge bg-warning ms-2">ADMIN</span>
+                    {% else %}
+                        <span class="badge bg-info ms-2">DOCTOR</span>
+                    {% endif %}
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="editUserForm">
+                    <!-- Información básica -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombre_completo" class="form-label">
+                                    <i class="bi bi-person"></i>
+                                    Nombre Completo *
+                                </label>
+                                <input type="text" class="form-control" id="nombre_completo" 
+                                       name="nombre_completo" value="{{ usuario.nombre_completo }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="carnet_identidad" class="form-label">
+                                    <i class="bi bi-card-text"></i>
+                                    Carnet de Identidad *
+                                </label>
+                                <input type="text" class="form-control" id="carnet_identidad" 
+                                       name="carnet_identidad" value="{{ usuario.carnet_identidad }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de acceso -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="nombre_usuario" class="form-label">
+                                    <i class="bi bi-at"></i>
+                                    Nombre de Usuario
+                                </label>
+                                <input type="text" class="form-control" id="nombre_usuario" 
+                                       value="{{ usuario.nombre_usuario }}" readonly>
+                                <small class="form-text text-muted">El nombre de usuario no se puede cambiar</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="rol" class="form-label">
+                                    <i class="bi bi-shield"></i>
+                                    Rol
+                                </label>
+                                <input type="text" class="form-control" id="rol" 
+                                       value="{{ usuario.rol.nombre.title() }}" readonly>
+                                <small class="form-text text-muted">El rol no se puede cambiar</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campos específicos para doctores -->
+                    {% if usuario.is_doctor() %}
+                    <div class="doctor-fields">
+                        <hr>
+                        <h6 class="text-primary">
+                            <i class="bi bi-stethoscope"></i>
+                            Información Médica
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="matricula_profesional" class="form-label">
+                                        <i class="bi bi-award"></i>
+                                        Matrícula Profesional
+                                    </label>
+                                    <input type="text" class="form-control" id="matricula_profesional" 
+                                           name="matricula_profesional" value="{{ usuario.matricula_profesional }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="especialidades" class="form-label">
+                                        <i class="bi bi-bookmark"></i>
+                                        Especialidades
+                                    </label>
+                                    <select multiple class="form-select" id="especialidades" name="especialidades" size="4">
+                                        {% for especialidad in especialidades %}
+                                            <option value="{{ especialidad.id }}" 
+                                                    {% if especialidad in usuario.especialidades %}selected{% endif %}>
+                                                {{ especialidad.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">Mantenga presionado Ctrl para seleccionar múltiples</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Cambio de contraseña -->
+                    <hr>
+                    <div class="password-section">
+                        <h6 class="text-primary">
+                            <i class="bi bi-key"></i>
+                            Cambiar Contraseña
+                        </h6>
+                        <p class="text-muted small">Deje en blanco si no desea cambiar la contraseña</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nueva_contrasena" class="form-label">
+                                        <i class="bi bi-lock"></i>
+                                        Nueva Contraseña
+                                    </label>
+                                    <input type="password" class="form-control" id="nueva_contrasena" 
+                                           name="nueva_contrasena" minlength="8">
+                                    <small class="form-text text-muted">
+                                        Mínimo 8 caracteres, debe incluir mayúsculas y caracteres especiales
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="confirmar_contrasena" class="form-label">
+                                        <i class="bi bi-lock-fill"></i>
+                                        Confirmar Contraseña
+                                    </label>
+                                    <input type="password" class="form-control" id="confirmar_contrasena" 
+                                           name="confirmar_contrasena" minlength="8">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información adicional -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="bi bi-calendar-plus"></i>
+                                    Fecha de Registro
+                                </label>
+                                <input type="text" class="form-control" 
+                                       value="{% if usuario.fecha_creacion %}{{ usuario.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}{% else %}No disponible{% endif %}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    <i class="bi bi-clock-history"></i>
+                                    Último Acceso
+                                </label>
+                                <input type="text" class="form-control" 
+                                       value="{% if usuario.ultimo_acceso %}{{ usuario.ultimo_acceso.strftime('%d/%m/%Y %H:%M') }}{% else %}Nunca{% endif %}" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        {% if usuario.is_admin() %}
+                            <a href="{{ url_for('admin.listar_administradores') }}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i>
+                                Cancelar
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('admin.listar_doctores') }}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i>
+                                Cancelar
+                            </a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i>
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editUserForm');
+    const nuevaContrasena = document.getElementById('nueva_contrasena');
+    const confirmarContrasena = document.getElementById('confirmar_contrasena');
+
+    // Validación de contraseñas en tiempo real
+    function validarContrasenas() {
+        if (nuevaContrasena.value || confirmarContrasena.value) {
+            if (nuevaContrasena.value !== confirmarContrasena.value) {
+                confirmarContrasena.setCustomValidity('Las contraseñas no coinciden');
+            } else {
+                confirmarContrasena.setCustomValidity('');
+            }
+        } else {
+            confirmarContrasena.setCustomValidity('');
+        }
+    }
+
+    nuevaContrasena.addEventListener('input', validarContrasenas);
+    confirmarContrasena.addEventListener('input', validarContrasenas);
+
+    // Validación de seguridad de contraseña
+    nuevaContrasena.addEventListener('input', function() {
+        const password = this.value;
+        const feedback = this.nextElementSibling;
+        
+        if (password.length > 0) {
+            let warnings = [];
+            
+            if (password.length < 8) {
+                warnings.push('al menos 8 caracteres');
+            }
+            if (!/[A-Z]/.test(password)) {
+                warnings.push('una letra mayúscula');
+            }
+            if (!/[^A-Za-z0-9]/.test(password)) {
+                warnings.push('un carácter especial');
+            }
+            
+            if (warnings.length > 0) {
+                feedback.innerHTML = `<span class="text-danger">Falta: ${warnings.join(', ')}</span>`;
+                this.setCustomValidity('La contraseña no cumple los requisitos');
+            } else {
+                feedback.innerHTML = '<span class="text-success">Contraseña válida</span>';
+                this.setCustomValidity('');
+            }
+        }
+    });
+
+    // Confirmación antes de enviar
+    form.addEventListener('submit', function(e) {
+        if (!confirm('¿Está seguro de que desea guardar los cambios?')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-label i {
+    margin-right: 0.5rem;
+    color: #6c757d;
+}
+
+.doctor-fields {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    margin: 1rem 0;
+}
+
+.password-section {
+    background-color: #fff3cd;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    border-left: 4px solid #ffc107;
+    margin: 1rem 0;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+input[readonly] {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+</style>
+{% endblock %}

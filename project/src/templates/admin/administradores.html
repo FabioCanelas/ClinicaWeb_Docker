@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Administradores - Sistema Clínica{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="bi bi-shield-check text-primary"></i>
+        Gestión de Administradores
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-arrow-left"></i>
+            Volver al Dashboard
+        </a>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i>
+            Nuevo Administrador
+        </a>
+    </div>
+</div>
+
+{% if administradores %}
+<div class="card shadow">
+    <div class="card-header">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="bi bi-people-fill"></i>
+            Lista de Administradores ({{ administradores|length }})
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nombre Completo</th>
+                        <th>Usuario</th>
+                        <th>Carnet de Identidad</th>
+                        <th>Estado</th>
+                        <th>Fecha de Registro</th>
+                        <th>Último Acceso</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for admin in administradores %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-3">
+                                    <i class="bi bi-person-badge"></i>
+                                </div>
+                                <div>
+                                    <strong>{{ admin.nombre_completo }}</strong>
+                                    {% if admin.is_superadmin() %}
+                                    <span class="badge bg-danger ms-2">SUPERADMIN</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <code class="text-primary">{{ admin.nombre_usuario }}</code>
+                        </td>
+                        <td>{{ admin.carnet_identidad }}</td>
+                        <td>
+                            {% if admin.estado %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Activo
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-x-circle"></i> Inactivo
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {% if admin.fecha_creacion %}
+                                    {{ admin.fecha_creacion.strftime('%d/%m/%Y %H:%M') }}
+                                {% else %}
+                                    No disponible
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                {% if admin.ultimo_acceso %}
+                                    {{ admin.ultimo_acceso.strftime('%d/%m/%Y %H:%M') }}
+                                {% else %}
+                                    Nunca
+                                {% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                {% if not admin.is_superadmin() %}
+                                    <!-- Botón para editar -->
+                                    <a href="{{ url_for('admin.editar_usuario', usuario_id=admin.id) }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-pencil"></i>
+                                        Editar
+                                    </a>
+                                    
+                                    <!-- Botón para activar/desactivar -->
+                                    <form method="POST" action="{{ url_for('admin.toggle_estado_administrador', admin_id=admin.id) }}" style="display: inline;">
+                                        {% if admin.estado %}
+                                            <button type="submit" class="btn btn-outline-warning btn-sm" 
+                                                    onclick="return confirm('¿Está seguro de desactivar a {{ admin.nombre_completo }}?')">
+                                                <i class="bi bi-pause-circle"></i>
+                                                Desactivar
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-outline-success btn-sm"
+                                                    onclick="return confirm('¿Está seguro de activar a {{ admin.nombre_completo }}?')">
+                                                <i class="bi bi-play-circle"></i>
+                                                Activar
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                    
+                                    <!-- Botón para resetear contraseña -->
+                                    <form method="POST" action="{{ url_for('admin.resetear_password_administrador', admin_id=admin.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-outline-info btn-sm ms-1"
+                                                onclick="return confirm('🔑 ¿Resetear contraseña de {{ admin.nombre_completo }}?\n\n✅ Se generará una contraseña temporal con el formato: Admin{{ admin.carnet_identidad }}*\n⚠️ El usuario deberá cambiarla en su próximo inicio de sesión')">
+                                            <i class="bi bi-key"></i>
+                                            Resetear Password
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Botón para eliminar -->
+                                    <form method="POST" action="{{ url_for('admin.eliminar_usuario', usuario_id=admin.id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm ms-1"
+                                                onclick="return confirm('¿Está COMPLETAMENTE SEGURO de eliminar a {{ admin.nombre_completo }}? Esta acción NO se puede deshacer.')">
+                                            <i class="bi bi-trash"></i>
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <!-- Botón especial para editar superadmin -->
+                                    <a href="{{ url_for('admin.editar_usuario', usuario_id=admin.id) }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-pencil"></i>
+                                        Editar
+                                    </a>
+                                    <span class="badge bg-secondary ms-2">
+                                        <i class="bi bi-shield-fill-check"></i>
+                                        Protegido
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+    <h4 class="text-muted mt-3">No hay administradores registrados</h4>
+    <p class="text-muted">Registre el primer administrador del sistema.</p>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i>
+        Registrar Administrador
+    </a>
+</div>
+{% endif %}
+
+<!-- Información adicional -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="m-0">
+                    <i class="bi bi-info-circle"></i>
+                    Información sobre Administradores
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li><strong>Superadministrador:</strong> Tiene acceso completo al sistema y no puede ser desactivado.</li>
+                    <li><strong>Administradores regulares:</strong> Pueden gestionar doctores, pacientes y reportes, pero no otros administradores.</li>
+                    <li><strong>Reseteo de contraseña:</strong> Genera una contraseña temporal que debe cambiarse en el próximo inicio de sesión.</li>
+                    <li><strong>Estados:</strong> Los administradores inactivos no pueden acceder al sistema.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Auto-ocultar mensajes de alerta después de 5 segundos
+setTimeout(function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(alert) {
+        if (alert.classList.contains('alert-success') || alert.classList.contains('alert-info')) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }
+    });
+}, 5000);
+
+// Confirmar acciones críticas
+document.querySelectorAll('form button[type="submit"]').forEach(function(button) {
+    button.addEventListener('click', function(e) {
+        const form = e.target.closest('form');
+        const action = form.getAttribute('action');
+        
+        if (action.includes('toggle_estado') || action.includes('resetear_password')) {
+            if (!confirm('¿Está seguro de realizar esta acción?')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+});
+</script>
+
+<style>
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #dee2e6;
+}
+
+.avatar-circle i {
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.btn-group .btn {
+    font-size: 0.8rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+</style>
+{% endblock %}

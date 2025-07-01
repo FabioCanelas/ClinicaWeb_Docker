@@ -39,21 +39,30 @@
     </div>
     
     <div class="col-xl col-md-6 mb-4">
-        <div class="card border-left-danger shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                            Administradores
+        {% if current_user.is_superadmin() %}
+        <a href="{{ url_for('admin.listar_administradores') }}" class="text-decoration-none">
+        {% endif %}
+            <div class="card border-left-danger shadow h-100 py-2 {% if current_user.is_superadmin() %}card-hover{% endif %}">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Administradores
+                                {% if current_user.is_superadmin() %}
+                                <small class="text-muted">(Click para gestionar)</small>
+                                {% endif %}
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_administradores }}</div>
                         </div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_administradores }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-person-lock fa-2x text-danger"></i>
+                        <div class="col-auto">
+                            <i class="bi bi-person-lock fa-2x text-danger"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        {% if current_user.is_superadmin() %}
+        </a>
+        {% endif %}
     </div>
 
     <div class="col-xl col-md-6 mb-4">
@@ -135,6 +144,14 @@
                             Ver Doctores
                         </a>
                     </div>
+                    {% if current_user.is_superadmin() %}
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('admin.listar_administradores') }}" class="btn btn-danger btn-lg w-100">
+                            <i class="bi bi-shield-check"></i><br>
+                            Administradores
+                        </a>
+                    </div>
+                    {% endif %}
                     <div class="col-md-3 mb-3">
                         <a href="{{ url_for('admin.listar_especialidades') }}" class="btn btn-info btn-lg w-100">
                             <i class="bi bi-heart-pulse"></i><br>
@@ -147,6 +164,14 @@
                             Reportes
                         </a>
                     </div>
+                    {% if current_user.is_admin() %}
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('admin.cambiar_contrasena_propia') }}" class="btn btn-secondary btn-lg w-100">
+                            <i class="bi bi-key"></i><br>
+                            Mi Contraseña
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -209,4 +234,41 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+.card-hover {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+}
+
+.text-decoration-none:hover {
+    text-decoration: none !important;
+}
+
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-danger {
+    border-left: 0.25rem solid #e74a3b !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+</style>
 {% endblock %}

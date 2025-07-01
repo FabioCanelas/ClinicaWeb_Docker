@@ -35,6 +35,10 @@ class Usuario(UserMixin, db.Model):
     nombre_completo = db.Column(db.String(150), nullable=False)
     carnet_identidad = db.Column(db.String(20), unique=True, nullable=True)  # Número de carnet para doctores - debe ser único
     matricula_profesional = db.Column(db.String(30), unique=True, nullable=True)  # Matrícula profesional para doctores - debe ser única
+    estado = db.Column(db.Boolean, default=True)  # Estado del usuario (activo/inactivo)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)  # Fecha de registro
+    ultimo_acceso = db.Column(db.DateTime, nullable=True)  # Último acceso al sistema
+    cambiar_contrasena = db.Column(db.Boolean, default=False)  # Forzar cambio de contraseña
 
     expedientes = db.relationship('Expediente', backref='doctor', lazy=True)
     especialidades = db.relationship('Especialidad', secondary=doctor_especialidad, backref='doctores')
