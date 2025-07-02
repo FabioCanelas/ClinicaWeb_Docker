@@ -27,6 +27,7 @@
             </div>
             <div class="card-body">
                 <form method="POST" class="needs-validation" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="row">
                         <!-- Información básica de la consulta -->
                         <div class="col-md-6">

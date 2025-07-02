@@ -77,3 +77,45 @@ WHERE cambiar_contrasena IS NULL;
 -- Verificar la estructura final
 SELECT 'Migración completada. Estructura actual de la tabla usuarios:' as mensaje;
 DESCRIBE usuarios;
+
+-- =====================================
+-- TABLAS DE SEGURIDAD - PROTECCIÓN CONTRA FUERZA BRUTA
+-- =====================================
+
+-- Crear tabla login_attempts para trackear intentos de login
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ip_address VARCHAR(45) NOT NULL COMMENT 'IPv4 o IPv6 del cliente',
+    username VARCHAR(80) COMMENT 'Usuario que intentó login (puede ser NULL)',
+    timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Momento del intento',
+    success BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Si el intento fue exitoso',
+    user_agent VARCHAR(500) COMMENT 'User-Agent del navegador',
+    
+    -- Índices para optimizar consultas de seguridad
+    INDEX idx_ip_timestamp (ip_address, timestamp),
+    INDEX idx_username_timestamp (username, timestamp),
+    INDEX idx_timestamp (timestamp),
+    INDEX idx_success_timestamp (success, timestamp)
+) COMMENT 'Registro de intentos de login para detección de ataques';
+
+-- Crear tabla account_locks para bloqueos temporales
+CREATE TABLE IF NOT EXISTS account_locks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(80) NOT NULL COMMENT 'Usuario bloqueado (* para bloqueo por IP)',
+    ip_address VARCHAR(45) NOT NULL COMMENT 'IP bloqueada',
+    locked_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Momento del bloqueo',
+    unlock_at DATETIME NOT NULL COMMENT 'Momento en que expira el bloqueo',
+    reason VARCHAR(255) DEFAULT 'Multiple failed login attempts' COMMENT 'Razón del bloqueo',
+    
+    -- Índices para verificación rápida de bloqueos
+    INDEX idx_username_unlock (username, unlock_at),
+    INDEX idx_ip_unlock (ip_address, unlock_at),
+    INDEX idx_unlock_at (unlock_at)
+) COMMENT 'Bloqueos temporales de cuentas e IPs';
+
+-- Verificar que las tablas de seguridad se crearon correctamente
+SELECT 'Tablas de seguridad creadas:' as mensaje;
+SHOW TABLES LIKE '%attempt%';
+SHOW TABLES LIKE '%lock%';
+
+SELECT '✅ MIGRACIÓN DE SEGURIDAD COMPLETADA - Sistema protegido contra fuerza bruta' as status;

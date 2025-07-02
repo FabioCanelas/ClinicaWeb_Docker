@@ -112,3 +112,36 @@ class Expediente(db.Model):
 
     def __repr__(self):
         return f'<Expediente {self.id}: {self.paciente.nombre_completo} - {self.especialidad.nombre}>'
+
+class LoginAttempt(db.Model):
+    """Modelo para trackear intentos de login y prevenir ataques de fuerza bruta"""
+    __tablename__ = 'login_attempts'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    ip_address = db.Column(db.String(45), nullable=False)  # IPv4 o IPv6
+    username = db.Column(db.String(80), nullable=True)  # Puede ser None si el usuario no existe
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    success = db.Column(db.Boolean, default=False, nullable=False)
+    user_agent = db.Column(db.String(500), nullable=True)
+
+    def __repr__(self):
+        return f'<LoginAttempt {self.ip_address} - {self.username} - {"Success" if self.success else "Failed"}>'
+
+class AccountLock(db.Model):
+    """Modelo para manejar bloqueos temporales de cuentas"""
+    __tablename__ = 'account_locks'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(80), nullable=False)
+    ip_address = db.Column(db.String(45), nullable=False)
+    locked_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    unlock_at = db.Column(db.DateTime, nullable=False)
+    reason = db.Column(db.String(255), default='Multiple failed login attempts')
+
+    def __repr__(self):
+        return f'<AccountLock {self.username} - {self.ip_address}>'
+
+    @property
+    def is_locked(self):
+        """Verifica si el bloqueo aún está activo"""
+        return datetime.utcnow() < self.unlock_at

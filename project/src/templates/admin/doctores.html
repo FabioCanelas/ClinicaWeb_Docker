@@ -137,6 +137,7 @@
                                 </a>
                                 <!-- Resetear Password -->
                                 <form method="POST" action="{{ url_for('admin.resetear_password_doctor', doctor_id=doctor.id) }}" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <button type="submit" class="btn btn-sm btn-outline-secondary"
                                             onclick="return confirm('¿Resetear la contraseña de {{ doctor.nombre_completo }}?\n\nSe generará una contraseña temporal con el formato: Dr{{ doctor.carnet_identidad }}*\n\nEl doctor deberá cambiarla en su próximo inicio de sesión.')">
                                         <i class="bi bi-key"></i>
@@ -144,6 +145,7 @@
                                 </form>
                                 <!-- Eliminar -->
                                 <form method="POST" action="{{ url_for('admin.eliminar_usuario', usuario_id=doctor.id) }}" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <button type="submit" class="btn btn-sm btn-outline-danger"
                                             onclick="return confirm('¿Está COMPLETAMENTE SEGURO de eliminar al doctor {{ doctor.nombre_completo }}? Esta acción eliminará también todos sus expedientes y NO se puede deshacer.')">
                                         <i class="bi bi-trash"></i>

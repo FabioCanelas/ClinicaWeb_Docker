@@ -112,9 +112,9 @@
                         </td>
                         <td>
                             {% if paciente.email %}
-                            <a href="mailto:{{ paciente.email }}" class="text-decoration-none">
+                            <a href="mailto:{{ paciente.email|e }}" class="text-decoration-none">
                                 <i class="bi bi-envelope"></i>
-                                {{ paciente.email }}
+                                {{ paciente.email|e }}
                             </a>
                             {% else %}
                             <span class="text-muted">No registrado</span>
@@ -177,7 +177,7 @@
                                 <div class="col-md-6">
                                     <h6 class="fw-bold">Información de Contacto</h6>
                                     <p><strong>Teléfono:</strong> {{ paciente.telefono or 'No registrado' }}</p>
-                                    <p><strong>Email:</strong> {{ paciente.email or 'No registrado' }}</p>
+                                    <p><strong>Email:</strong> {{ paciente.email|e or 'No registrado' }}</p>
                                     <p><strong>Dirección:</strong> {{ paciente.direccion or 'No registrada' }}</p>
                                     <p><strong>Estado:</strong> 
                                         <span class="badge bg-{{ 'success' if paciente.estado else 'danger' }}">

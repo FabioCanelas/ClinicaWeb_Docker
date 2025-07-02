@@ -17,11 +17,12 @@ doctor_bp = Blueprint('doctor', __name__)
 def doctor_required(f):
     """
     Decorador que requiere permisos de doctor
-    Verifica que el usuario actual sea doctor o administrador
+    Verifica que el usuario actual sea doctor únicamente
+    Los administradores tienen sus propias rutas y no necesitan acceso a funcionalidades de doctores
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not (current_user.is_doctor() or current_user.is_admin()):
+        if not current_user.is_authenticated or not current_user.is_doctor():
             flash('Acceso denegado. Se requieren permisos de doctor.', 'error')
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
@@ -100,7 +101,19 @@ def nuevo_paciente():
     Formulario para registrar un nuevo paciente
     GET: Muestra el formulario
     POST: Procesa y guarda el nuevo paciente
+    🔒 TC28: Validación de lógica de negocio - Verificar que existan doctores
     """
+    # 🔒 TC28: VALIDACIÓN CRÍTICA DE LÓGICA DE NEGOCIO
+    # Verificar que existan doctores registrados antes de permitir crear pacientes
+    doctores_activos = Usuario.query.filter(
+        Usuario.rol_id == 2,  # rol_id=2 para doctores
+        Usuario.estado == True
+    ).count()
+    
+    if doctores_activos == 0:
+        flash('❌ No hay doctores registrados en el sistema. Es necesario registrar al menos un doctor antes de gestionar pacientes.', 'error')
+        return redirect(url_for('admin.listar_doctores'))  # Redirigir a gestión de doctores
+    
     if request.method == 'POST':
         carnet = request.form.get('carnet')
         nombres = request.form.get('nombres')
@@ -125,6 +138,26 @@ def nuevo_paciente():
         if email and Paciente.query.filter_by(email=email).first():
             flash('Ya existe un paciente con ese email.', 'error')
             return render_template('doctor/nuevo_paciente.html')
+        
+        # 🔒 TC30: VALIDACIÓN Y SANITIZACIÓN DE EMAIL
+        # Validar formato de email y prevenir XSS
+        if email:
+            import re
+            from html import escape
+            
+            # Validación de formato email RFC 5322 simplificada
+            email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_regex, email):
+                flash('El formato del email no es válido.', 'error')
+                return render_template('doctor/nuevo_paciente.html')
+            
+            # Sanitizar email para prevenir XSS
+            email = escape(email.strip())
+            
+            # Validación adicional de longitud
+            if len(email) > 100:
+                flash('El email es demasiado largo (máximo 100 caracteres).', 'error')
+                return render_template('doctor/nuevo_paciente.html')
             
         # Validar que el teléfono tenga exactamente 8 dígitos si se proporciona
         if telefono:

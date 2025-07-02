@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Estado de Seguridad{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>🔒 Estado de Seguridad del Sistema</h2>
+            <p class="text-muted">Panel de monitoreo de seguridad - Últimos 7 días</p>
+        </div>
+    </div>
+
+    <!-- Estadísticas Generales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Intentos</h5>
+                    <h3>{{ total_attempts }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Exitosos</h5>
+                    <h3>{{ successful_attempts }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Fallidos</h5>
+                    <h3>{{ failed_attempts }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Bloqueados</h5>
+                    <h3>{{ active_locks|length }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cuentas Bloqueadas -->
+    {% if active_locks %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5>🚫 Cuentas/IPs Bloqueadas</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>IP</th>
+                            <th>Bloqueado Hasta</th>
+                            <th>Razón</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lock in active_locks %}
+                        <tr>
+                            <td>{{ lock.username }}</td>
+                            <td>{{ lock.ip_address }}</td>
+                            <td>{{ lock.unlock_at.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                            <td>{{ lock.reason }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning unlock-btn" 
+                                        data-username="{{ lock.username }}" 
+                                        data-ip="{{ lock.ip_address }}">
+                                    Desbloquear
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-success">
+        <h5>✅ No hay cuentas bloqueadas</h5>
+        <p>Actualmente no hay cuentas o IPs bloqueadas en el sistema.</p>
+    </div>
+    {% endif %}
+
+    <!-- IPs más activas -->
+    {% if top_ips %}
+    <div class="card">
+        <div class="card-header">
+            <h5>📊 IPs más Activas</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>IP Address</th>
+                            <th>Intentos</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ip, count in top_ips %}
+                        <tr>
+                            <td>{{ ip }}</td>
+                            <td>
+                                <span class="badge {% if count > 10 %}badge-danger{% elif count > 5 %}badge-warning{% else %}badge-info{% endif %}">
+                                    {{ count }}
+                                </span>
+                            </td>
+                            <td>
+                                {% set is_blocked = active_locks|selectattr('ip_address', 'equalto', ip)|list %}
+                                {% if is_blocked %}
+                                    <span class="badge badge-danger">Bloqueada</span>
+                                {% else %}
+                                    <span class="badge badge-success">Activa</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">
+            ← Volver al Dashboard
+        </a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manejar botones de desbloqueo
+    document.querySelectorAll('.unlock-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const username = this.dataset.username;
+            const ip = this.dataset.ip;
+            
+            if (confirm(`¿Está seguro de desbloquear ${username !== '*' ? 'usuario: ' + username : 'IP: ' + ip}?`)) {
+                fetch('{{ url_for("auth.unlock_account") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: `username=${encodeURIComponent(username)}&ip_address=${encodeURIComponent(ip)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Cuenta desbloqueada exitosamente');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al desbloquear la cuenta');
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -47,7 +47,58 @@
                   </div>
                 {% endif %}
 
+                {% if already_authenticated %}
+                <!-- 🎨 Mensaje estético para usuario ya autenticado -->
+                <div class="card border-success mb-4 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="{{ icon_class }} text-success" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title text-success fw-bold">¡Ya tienes una sesión activa!</h5>
+                        <p class="card-text">
+                            Hola <strong>{{ user_name }}</strong><br>
+                            <span class="badge bg-primary">{{ user_role }}</span>
+                        </p>
+                        <div class="alert alert-light border-0 mb-3">
+                            <small class="text-muted">
+                                <i class="bi bi-clock"></i>
+                                Redirigiendo automáticamente a tu {{ dashboard_name }} en <span id="countdown">3</span> segundos...
+                            </small>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <a href="{{ dashboard_url }}" class="btn btn-success btn-lg">
+                                <i class="bi bi-arrow-right-circle"></i>
+                                Ir a {{ dashboard_name }}
+                            </a>
+                            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-box-arrow-right"></i>
+                                Cerrar sesión
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    // Redirección automática con countdown
+                    let countdown = 3;
+                    const countdownElement = document.getElementById('countdown');
+                    
+                    const timer = setInterval(() => {
+                        countdown--;
+                        countdownElement.textContent = countdown;
+                        
+                        if (countdown <= 0) {
+                            clearInterval(timer);
+                            window.location.href = "{{ dashboard_url }}";
+                        }
+                    }, 1000);
+                </script>
+
+                {% else %}
+                <!-- Formulario normal de login -->
+
                 <form method="POST" class="needs-validation" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <div class="mb-3">
                         <label for="nombre_usuario" class="form-label">
                             <i class="bi bi-person"></i> Usuario
@@ -123,6 +174,8 @@
                         <strong>Doctor:</strong> (Debe ser creado por el administrador)
                     </small>
                 </div>
+                {% endif %}
+                <!-- Fin del bloque de autenticación -->
             </div>
         </div>
     </div>
